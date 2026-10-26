@@ -1,0 +1,11 @@
+import { chromium } from 'playwright';
+const browser=await chromium.launch({headless:true,args:['--enable-webgl','--ignore-gpu-blocklist']});
+const page=await browser.newPage({viewport:{width:1600,height:1000}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+await page.goto('http://127.0.0.1:5173/');await page.waitForFunction(()=>window.hall&&document.querySelector('#loading').classList.contains('done'),{timeout:60000});await page.waitForTimeout(2000);
+await page.screenshot({path:'qa-entrance.png'});
+console.log(await page.evaluate(()=>({artworks:hall.frames.length,left:hall.frames.filter(m=>m.parent.position.x<0).length,right:hall.frames.filter(m=>m.parent.position.x>0).length,meshes:hall.scene.meshes.length,fps:hall.engine.getFps()})));
+await page.locator('[data-view="nave"]').click();await page.waitForTimeout(2500);await page.screenshot({path:'qa-nave.png'});
+await page.evaluate(()=>hall.openArticle(0));await page.locator('#article').waitFor({state:'visible'});if(await page.locator('#article-title').textContent()!=='The Sunken Kingdom')throw Error('Article title mismatch');await page.locator('#next').click();if(await page.locator('#article-title').textContent()!=='The Verdant Archive')throw Error('Next failed');await page.locator('#close').click();
+await page.locator('#help').click();await page.locator('#got-it').click();await page.locator('#tour').click();await page.waitForTimeout(500);await page.locator('#tour').click();
+await page.setViewportSize({width:390,height:844});await page.locator('[data-view="entrance"]').click();await page.waitForTimeout(2500);await page.screenshot({path:'qa-mobile.png'});
+console.log({errors,dialogsClosed:await page.locator('dialog[open]').count(),mobileOverflow:await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)});await browser.close();if(errors.length)process.exitCode=1;
