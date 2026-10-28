@@ -1,0 +1,138 @@
+{
+  "license": "CC0-1.0",
+  "providers": [
+    "Poly Haven",
+    "ambientCG"
+  ],
+  "materials": [
+    {
+      "role": "limestone",
+      "source": "https://polyhaven.com/a/beige_wall_001",
+      "author": "Dimitrios Savva (photography), Rico Cilliers (processing)",
+      "files": [
+        {
+          "path": "limestone/1024/albedo.webp",
+          "size": 1024,
+          "sha256": "9a29f392d50d5eedfb310b080285bfe338db55168bdd8e52ce94c8deee25e91b",
+          "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/beige_wall_001/beige_wall_001_diff_2k.jpg"
+        },
+        {
+          "path": "limestone/2048/albedo.webp",
+          "size": 2048,
+          "sha256": "ef629874089e9d2331c1a7fddd307f227c734474374c9992fda6ee242bfa18c5",
+          "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/beige_wall_001/beige_wall_001_diff_2k.jpg"
+        },
+        {
+          "path": "limestone/1024/normal.png",
+          "size": 1024,
+          "sha256": "05a343f57039377cc3907f5a106d0af3ed702daaeebba757f963c515e03d07fc",
+          "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/beige_wall_001/beige_wall_001_nor_gl_2k.jpg"
+        },
+        {
+          "path": "limestone/2048/normal.png",
+          "size": 2048,
+          "sha256": "b05324026f75104d6487ab216518c1fa81ef7044eb876174ac7beeaf0c184997",
+          "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/beige_wall_001/beige_wall_001_nor_gl_2k.jpg"
+        },
+        {
+          "path": "limestone/1024/orm.png",
+          "size": 1024,
+          "sha256": "fc0dfb660c2cf037673c338c5e96b9a8e04be72aa5e7ddc1b8851b34b29a2395",
+          "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/beige_wall_001/beige_wall_001_arm_2k.jpg"
+        },
+        {
+          "path": "limestone/2048/orm.png",
+          "size": 2048,
+          "sha256": "b60582882b7889657ba9c12d6b03d47831029931c0d42b66ddf6ca71d2a7b2bb",
+          "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/beige_wall_001/beige_wall_001_arm_2k.jpg"
+        }
+      ]
+    },
+    {
+      "role": "marble",
+      "source": "https://ambientcg.com/view?id=Marble012",
+      "author": "Lennart Demes",
+      "files": [
+        {
+          "path": "marble/1024/albedo.webp",
+          "size": 1024,
+          "sha256": "94e86d10d31f87706079c885cecee2b5b7d607f058c67c29cadc4e8af558d278",
+          "source": "https://ambientcg.com/get?file=Marble012_2K-JPG.zip"
+        },
+        {
+          "path": "marble/2048/albedo.webp",
+          "size": 2048,
+          "sha256": "a7be4c180c7b7e485c01c680f1010967d76aeae6d0e6bae5c92b5aaa2d016e14",
+          "source": "https://ambientcg.com/get?file=Marble012_2K-JPG.zip"
+        },
+        {
+          "path": "marble/1024/normal.png",
+          "size": 1024,
+          "sha256": "f3e031aa85a5fbd354012ad34deda9eb21209efeda5a73726d829ba5cceefead",
+          "source": "https://ambientcg.com/get?file=Marble012_2K-JPG.zip"
+        },
+        {
+          "path": "marble/2048/normal.png",
+          "size": 2048,
+          "sha256": "acb6a58d3333b4895dca24a93f0f235fc351e495b8e1b6dcf12a086fb2db59bf",
+          "source": "https://ambientcg.com/get?file=Marble012_2K-JPG.zip"
+        },
+        {
+          "path": "marble/1024/orm.png",
+          "size": 1024,
+          "sha256": "52ff03bc715b23c0b61141049b1a444b8ea5621f13b88fc9eac5053b600a7156",
+          "source": "https://ambientcg.com/get?file=Marble012_2K-JPG.zip"
+        },
+        {
+          "path": "marble/2048/orm.png",
+          "size": 2048,
+          "sha256": "b63fd1593f5d35ed91141f3c900ebdbc5f1e545748dac5dd7d27115158b2c4af",
+          "source": "https://ambientcg.com/get?file=Marble012_2K-JPG.zip"
+        }
+      ]
+    },
+    {
+      "role": "brass",
+      "source": "https://polyhaven.com/a/metal_plate",
+      "author": "Rob Tuytel",
+      "files": [
+        {
+          "path": "brass/1024/albedo.webp",
+          "size": 1024,
+          "sha256": "645293ae402606a075c21eb2c05575a978f4307fd732f2cb828cde2618637638",
+          "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/metal_plate/metal_plate_diff_2k.jpg"
+        },
+        {
+          "path": "brass/2048/albedo.webp",
+          "size": 2048,
+          "sha256": "be2ceb174f9b6287aa9aff5c207d3045c2610b26c97b835b0a34ac45c6be3eb1",
+          "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/metal_plate/metal_plate_diff_2k.jpg"
+        },
+        {
+          "path": "brass/1024/normal.png",
+          "size": 1024,
+          "sha256": "596f7200493f07c1eec63a2d11946f18606a0ad333829fd157a1923ded439967",
+          "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/metal_plate/metal_plate_nor_gl_2k.jpg"
+        },
+        {
+          "path": "brass/2048/normal.png",
+          "size": 2048,
+          "sha256": "815b9e20659ea9c93cf44a21765ee8077ad31e7900f5bf78fcb491ed12b6f8e9",
+          "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/metal_plate/metal_plate_nor_gl_2k.jpg"
+        },
+        {
+          "path": "brass/1024/orm.png",
+          "size": 1024,
+          "sha256": "cfce07a06353af3d8842558b962e9438aa72a2d5eb5571c2dbb6bfd183dad23d",
+          "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/metal_plate/metal_plate_arm_2k.jpg"
+        },
+        {
+          "path": "brass/2048/orm.png",
+          "size": 2048,
+          "sha256": "8b10d75d283f93a9d2fe7164101d42e889521308ed85c907fda50c48d63f7317",
+          "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/metal_plate/metal_plate_arm_2k.jpg"
+        }
+      ]
+    }
+  ]
+}
