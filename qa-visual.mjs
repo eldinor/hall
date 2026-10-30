@@ -5,17 +5,21 @@ import path from 'node:path';
 const args=process.argv.slice(2),hardware=args.includes('--hardware');
 const option=(key,fallback)=>args.includes(key)?args[args.indexOf(key)+1]:fallback;
 const phase=option('--phase','final'),profile=option('--profile','cinematic');
+const backend=option('--backend',null);
 const directory=path.resolve('outputs/visual',`${phase}-${hardware?'hardware':'correctness'}-${profile}`);
 fs.mkdirSync(directory,{recursive:true});
-const browser=await chromium.launch({headless:!hardware,args:hardware?['--use-angle=d3d11','--force_high_performance_gpu','--disable-background-timer-throttling']:['--enable-webgl','--ignore-gpu-blocklist']});
+const browser=await chromium.launch({channel:backend?'chromium':undefined,headless:!hardware,args:backend?['--enable-unsafe-webgpu','--use-angle=d3d11','--ignore-gpu-blocklist']:hardware?['--use-angle=d3d11','--force_high_performance_gpu','--disable-background-timer-throttling']:['--enable-webgl','--ignore-gpu-blocklist']});
 const report={phase,profile,mode:hardware?'hardware benchmark':'headless correctness only',timestamp:new Date().toISOString(),errors:[],views:[]};
 try{
  const page=await browser.newPage({viewport:hardware?{width:1920,height:1080}:{width:1600,height:900},deviceScaleFactor:1});
+ if(backend==='webgl')await page.addInitScript(()=>localStorage.setItem('exalted-renderer-v1','webgl'));
  if(phase!=='baseline')await page.addInitScript(({selected,effectsOff})=>localStorage.setItem('exalted-lighting-v1',JSON.stringify({schemaVersion:2,qualityProfile:selected,columnPalette:'blue-v1',glassProfile:'blocks-v1',...(effectsOff?{aoEnabled:false,shadowsEnabled:false}:{})})),{selected:profile,effectsOff:args.includes('--effects-off')});
  page.on('pageerror',e=>report.errors.push(e.message));
  page.on('console',message=>{if(message.type()==='error')report.errors.push(message.text())});
  await page.goto(option('--url','http://127.0.0.1:5173/'));
  await page.waitForFunction(()=>window.hall&&document.querySelector('#loading').classList.contains('done'),{timeout:120000});
+ report.rendererInfo=await page.evaluate(()=>hall.rendererInfo);
+ const expectedBackend=option('--backend',null);if(expectedBackend&&report.rendererInfo.activeBackend!==expectedBackend)throw Error('Expected '+expectedBackend+', got '+report.rendererInfo.activeBackend);
  await page.evaluate(async selected=>{
   if(hall.visuals)await hall.visuals.setProfile(selected);
   document.querySelector('#light-debug').open=false;
@@ -25,6 +29,11 @@ try{
  if(args.includes('--effects-off'))await page.evaluate(()=>hall.lightingDebug.setSettings({shadowsEnabled:false,aoEnabled:false}));
  const views=[['entrance',[0,4.6,-17],[2.7,8.5,28]],['nave',[0,3.1,10],[0,9,49]],['portal',[0,3.2,37],[0,7.5,55]],['windows',[0,7,10],[14,11,13]],['pedestal',[-4.5,2.5,-1],[-7.8,3.2,2]]];
  if(args.includes('--lantern-detail'))views[4]=['lantern',[-8.9,9.7,-9],[-10.4,10.7,-7]];
+ if(args.includes('--brass-detail'))views[3]=['brass',[-8.8,8.2,2.5],[-12.2,9,4.5]];
+ if(args.includes('--marble-detail')){
+  views[1]=['floor',[0,2.2,-8],[0,.9,22]];
+  views[4]=['pedestal-base',[-5,2.2,-.5],[-7.8,.65,2]];
+ }
  for(const [name,position,target] of views){
   await page.evaluate(({position,target})=>{const V=hall.camera.position.constructor;hall.camera.position.set(...position);hall.camera.setTarget(new V(...target));}, {position,target});
   await page.waitForTimeout(hardware?1800:350);

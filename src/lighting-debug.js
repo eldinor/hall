@@ -1,4 +1,6 @@
-export function createLightingDebug({scene,camera,canvas,ambient,fill,columnLights,columnLightCluster,columnLightColors,lanterns,frames,windowGlass,pipeline,imageProcessing,visuals,Color3}){
+import {rendererStorageKey} from './renderer.js';
+
+export function createLightingDebug({scene,camera,canvas,rendererInfo,ambient,fill,columnLights,columnLightCluster,columnLightColors,lanterns,frames,windowGlass,pipeline,imageProcessing,visuals,Color3}){
  const storageKey='exalted-lighting-v1';
  const defaultProfile=window.matchMedia('(pointer: coarse)').matches||innerWidth<=850?'performance':'cinematic';
  const defaults={schemaVersion:2,qualityProfile:defaultProfile,aoEnabled:true,aoStrength:.55,aoRadius:.35,fogDensity:.006,dustEnabled:true,ambient:.35,ambientColor:'#b3abdc',fill:.15,fillColor:'#9180db',columns:1.3,columnRange:14,columnColor:'#ffffff',columnPalette:'blue-v1',globeGlow:2,artGlow:.7,glassProfile:'blocks-v1',glassOpacity:.22,glassRoughness:.045,glassRefraction:1,glassIOR:1.52,glassThickness:.24,glassReflection:.55,skyBrightness:.7,skyRotation:110,exposure:1.2,contrast:1.1,bloom:true,bloomWeight:.22,bloomThreshold:.85,bloomKernel:64,vignette:true};
@@ -9,7 +11,7 @@ export function createLightingDebug({scene,camera,canvas,ambient,fill,columnLigh
   ['Self-lit surfaces',[['artGlow','Artwork glow',0,2,.05]]],
   ['Glass blocks',[['glassOpacity','Surface opacity',.02,.6,.01],['glassRoughness','Roughness',0,.5,.005],['glassRefraction','Refraction strength',0,1,.01],['glassIOR','Refraction index',1,1.8,.01],['glassThickness','Optical thickness (m)',.01,.4,.01],['glassReflection','Reflection strength',0,2,.05]]],
   ['Sky',[['skyBrightness','Brightness',.1,2,.05],['skyRotation','Rotation (degrees)',0,360,1]]],
-  ['Atmosphere',[['fogDensity','Distance fog',0,.02,.001],['dustEnabled','Moving dust','checkbox']]],
+  ['Atmosphere',[['fogDensity','Distance fog',0,.02,.001],['dustEnabled','Air particles','checkbox']]],
   ['Image processing',[['exposure','Exposure',.2,3,.05],['contrast','Contrast',.5,2,.05],['vignette','Vignette','checkbox']]],
   ['Bloom',[['bloom','Enable bloom','checkbox'],['bloomWeight','Strength',0,1,.01],['bloomThreshold','Threshold',0,2,.05],['bloomKernel','Blur radius',8,128,8]]]
  ];
@@ -40,6 +42,18 @@ export function createLightingDebug({scene,camera,canvas,ambient,fill,columnLigh
  }
  form.addEventListener('submit',event=>event.preventDefault());
  document.body.append(panel);
+ const rendererRow=document.createElement('label');rendererRow.className='light-debug-control';
+ const rendererLabel=document.createElement('span');rendererLabel.textContent='Renderer';
+ const rendererSelect=document.createElement('select');rendererSelect.id='renderer-preference';rendererSelect.name='rendererPreference';
+ for(const [value,text] of [['auto','Auto (WebGPU preferred)'],['webgl','WebGL compatibility']]){const option=document.createElement('option');option.value=value;option.textContent=text;rendererSelect.append(option)}
+ rendererSelect.value=rendererInfo.preference;rendererRow.append(rendererLabel,rendererSelect);form.querySelector('fieldset').prepend(rendererRow);
+ rendererSelect.addEventListener('input',event=>{
+  event.stopPropagation();
+  try{localStorage.setItem(rendererStorageKey,rendererSelect.value);window.location.reload()}
+  catch{rendererSelect.value=rendererInfo.preference;feedback.textContent='Renderer choice requires browser storage. Please allow storage and try again.'}
+ });
+ const backendStatus=document.createElement('p');backendStatus.className='renderer-status';backendStatus.textContent=`Active renderer: ${rendererInfo.activeBackend==='webgpu'?'WebGPU':'WebGL'}${rendererInfo.fallbackReason?' · '+rendererInfo.fallbackReason:''}`;
+ rendererRow.after(backendStatus);
  const color=(hex,amount=1)=>Color3.FromHexString(hex).scale(amount);
  const feedback=panel.querySelector('.light-debug-feedback');
  function apply(){
@@ -65,9 +79,9 @@ export function createLightingDebug({scene,camera,canvas,ambient,fill,columnLigh
  form.addEventListener('input',event=>{const input=event.target;if(!(input instanceof HTMLInputElement||input instanceof HTMLSelectElement))return;settings[input.name]=input.type==='checkbox'?input.checked:input.type==='color'||input instanceof HTMLSelectElement?input.value:Number(input.value);apply();sync();save()});
  panel.querySelector('#lighting-reset').onclick=()=>{settings={...defaults};apply();sync();save();feedback.textContent='Default lighting restored.'};
  panel.querySelector('#lighting-copy').onclick=async()=>{try{await navigator.clipboard.writeText(JSON.stringify(settings,null,2));feedback.textContent='Settings copied.'}catch{feedback.textContent='Clipboard unavailable. Settings remain saved in this browser.'}};
- // Editing sliders and scrolling this panel must not steer the visitor camera.
- const resumeCamera=()=>{if(!panel.contains(document.activeElement)&&!panel.matches(':hover')&&!document.querySelector('dialog[open]'))camera.attachControl(canvas,true)};
- panel.addEventListener('pointerenter',()=>camera.detachControl());panel.addEventListener('pointerleave',resumeCamera);
+ // Focused controls own keyboard input; merely hovering the panel must not
+ // disable WASD after a dialog closes or the visitor returns to the canvas.
+ const resumeCamera=()=>{if(!panel.contains(document.activeElement)&&!document.querySelector('dialog[open]'))camera.attachControl(canvas,true)};
  panel.addEventListener('focusin',()=>camera.detachControl());panel.addEventListener('focusout',()=>queueMicrotask(resumeCamera));
  panel.addEventListener('keydown',event=>event.stopPropagation());
  sync();apply();

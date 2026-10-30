@@ -1,3 +1,4 @@
+const url=process.env.HALL_URL||'http://127.0.0.1:5173/';
 import {chromium} from 'playwright';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
@@ -13,7 +14,7 @@ try{
  await page.addInitScript(()=>{if(!localStorage.getItem('qa-seeded')){localStorage.setItem('exalted-lighting-v1',JSON.stringify({ambient:.27,fill:.4,columns:2.6,columnPalette:'blue-v1',glassProfile:'blocks-v1',columnColor:'#ffffff'}));localStorage.setItem('qa-seeded','1')}});
  const bounded=async(promise,label)=>{let timer;try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('Timed out: '+label)),45000)})])}finally{clearTimeout(timer)}};
  const wait=async()=>{await page.waitForFunction(()=>window.hall&&document.querySelector('#loading').classList.contains('done'),{timeout:120000});await bounded(page.evaluate(()=>hall.visuals.ready),'visual readiness')};
- await page.goto('http://127.0.0.1:5173/');await wait();
+ await page.goto(url);await wait();
  console.log('Checking cinematic state and saved-settings migration');
  report.checks.push(await page.evaluate(()=>{
   const assert=(condition,message)=>{if(!condition)throw Error(message)};const state=hall.visuals.getState(),settings=hall.lightingDebug.getSettings();
@@ -57,9 +58,9 @@ try{
   return {allArticles:true,billboards:true,upperWindowsClear:true,tour30Seconds:true};
  }));
  await page.locator('#lighting-reset').click();if(!await page.evaluate(()=>hall.lightingDebug.getSettings().ambient===.35&&hall.lightingDebug.getSettings().fill===.15))throw Error('Reset defaults wrong');
- console.log('Checking mobile defaults');
- const mobile=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});mobile.on('pageerror',e=>errors.push(e.message));await mobile.goto('http://127.0.0.1:5173/');await mobile.waitForFunction(()=>window.hall&&document.querySelector('#loading').classList.contains('done'),{timeout:120000});await mobile.evaluate(()=>hall.visuals.ready);
- report.checks.push(await mobile.evaluate(()=>{const r=document.querySelector('#light-debug').getBoundingClientRect();if(hall.qualityProfile!=='performance'||document.documentElement.scrollWidth>innerWidth||r.right>innerWidth)throw Error('Mobile profile/layout failure');return {mobileDefaultPerformance:true,noOverflow:true}}));
+ console.log('Checking mobile placeholder');
+ const mobile=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});mobile.on('pageerror',e=>errors.push(e.message));await mobile.goto(url);await mobile.waitForFunction(()=>document.documentElement.dataset.appState==='mobile');
+ report.checks.push(await mobile.evaluate(()=>{if(window.hall||document.documentElement.scrollWidth>innerWidth||document.querySelector('#mobile-placeholder').hidden)throw Error('Mobile placeholder/layout failure');return {mobilePlaceholder:true,noOverflow:true}}));
  await mobile.close();await context.close();
  report.errors=errors;if(errors.length)throw Error(errors.join('\n'));
  console.log(JSON.stringify(report,null,2));

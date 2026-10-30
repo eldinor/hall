@@ -23,10 +23,11 @@ function createBlockGeometry(){
 }
 
 export function createWindowGlass(scene){
- // One prefiltered HDR environment supplies sky, glass reflections and refraction.
+ // Keep lighting/reflections compact; Cinematic can load a sharper visible sky.
  const reflection=B.CubeTexture.CreateFromPrefilteredData(`${import.meta.env.BASE_URL}environments/night.env`,scene);
  scene.environmentTexture=reflection;
- const skyTexture=reflection.clone();skyTexture.coordinatesMode=B.Texture.SKYBOX_MODE;skyTexture.level=.7;
+ let skyTexture=reflection.clone(),skyResolution=512,skyGeneration=0;
+ skyTexture.coordinatesMode=B.Texture.SKYBOX_MODE;skyTexture.level=.7;
  const skybox=B.MeshBuilder.CreateBox('Night skybox',{size:300},scene);
  skybox.infiniteDistance=true;skybox.isPickable=false;skybox.applyFog=false;
  skybox.metadata={skybox:true};
@@ -35,6 +36,22 @@ export function createWindowGlass(scene){
  skyMaterial.diffuseColor=B.Color3.Black();skyMaterial.specularColor=B.Color3.Black();skyMaterial.reflectionTexture=skyTexture;
  skybox.material=skyMaterial;
  reflection.rotationY=skyTexture.rotationY=110*Math.PI/180;
+ function setSkyResolution(size){
+  const version=++skyGeneration;
+  if(size===skyResolution)return Promise.resolve();
+  function replace(next){
+   next.coordinatesMode=B.Texture.SKYBOX_MODE;next.level=skyTexture.level;next.rotationY=skyTexture.rotationY;
+   const previous=skyTexture;skyTexture=next;skyResolution=size;skyMaterial.reflectionTexture=next;previous.dispose();
+  }
+  if(size===512){replace(reflection.clone());return Promise.resolve()}
+  return new Promise((resolve,reject)=>{
+   const next=new B.CubeTexture(`${import.meta.env.BASE_URL}environments/night-1024.env`,scene,undefined,false,undefined,()=>{
+    if(version!==skyGeneration||scene.isDisposed){next.dispose();resolve();return}
+    replace(next);resolve();
+   },(message,error)=>{next.dispose();if(version!==skyGeneration||scene.isDisposed)resolve();else reject(new Error(message||String(error)))},undefined,true);
+  });
+ }
+ scene.onDisposeObservable.add(()=>{skyGeneration++});
  const materials=[];
  for(const side of [-1,1]){
   const glass=new B.PBRMaterial(`Glass block material ${side}`,scene);
@@ -58,5 +75,5 @@ export function createWindowGlass(scene){
   if(!prototype){geometry.applyToMesh(block);prototype=block}
   block.position.set(side*12.35,y,z);block.material=materials[side<0?0:1];return block;
  }
- return {materials,refractions:[reflection],exteriors:[skybox],reflection,skybox,skyTexture,createBlock,get blockCount(){return blockCount},blockDimensions:{width:.576,height:.576,thickness:.24,joint:.024}};
+ return {materials,refractions:[reflection],exteriors:[skybox],reflection,skybox,get skyTexture(){return skyTexture},setSkyResolution,createBlock,get blockCount(){return blockCount},blockDimensions:{width:.576,height:.576,thickness:.24,joint:.024}};
 }

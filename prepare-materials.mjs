@@ -26,15 +26,17 @@ for(const [role,id]of sources){
   const local=role==='marble'?path.join(cache,`Marble012_2K-JPG_${{albedo:'Color',normal:'NormalGL',orm:'Roughness'}[map]}.jpg`):path.join(cache,`${map}.jpg`);
   if(role!=='marble'&&(!fs.existsSync(local)||fs.statSync(local).size!==source.size)){const result=spawnSync('curl.exe',['-fLsS','--retry','2',source.url,'-o',local],{stdio:'inherit'});if(result.status!==0)throw Error(`Download failed: ${source.url}`)}
   if(source.md5&&crypto.createHash('md5').update(fs.readFileSync(local)).digest('hex')!==source.md5)throw Error(`Source checksum mismatch: ${local}`);
-  const original=await sharp(local).removeAlpha().raw().toBuffer({resolveWithObject:true});
-  if(role==='brass'&&map==='albedo')for(let i=0;i<original.data.length;i+=3){const luma=(original.data[i]*.2126+original.data[i+1]*.7152+original.data[i+2]*.0722)/255;const value=Math.round(255*(.9+.08*luma));original.data[i]=value;original.data[i+1]=value;original.data[i+2]=value}
-  // Remove the source plate's raised tread pattern. The architectural finish
-  // uses very fine directional brushing, not industrial embossed geometry.
-  if(role==='brass'&&map==='normal')for(let y=0;y<original.info.height;y++)for(let x=0;x<original.info.width;x++){const i=(y*original.info.width+x)*3;const brush=Math.sin(y*2.2)+.4*Math.sin(y*.41);original.data[i]=128;original.data[i+1]=Math.round(128+brush*1.5);original.data[i+2]=255}
+  let image=sharp(local).removeAlpha();
+  if(role==='brass'&&map!=='normal')image=image.blur(32);
+  const original=await image.raw().toBuffer({resolveWithObject:true});
+  if(role==='brass'&&map==='albedo')for(let i=0;i<original.data.length;i+=3){const luma=(original.data[i]*.2126+original.data[i+1]*.7152+original.data[i+2]*.0722)/255;const value=Math.round(255*(.93+.02*luma));original.data[i]=value;original.data[i+1]=value;original.data[i+2]=value}
+  // Small architectural trims need a calm finish at walking distance.
+  // Flat normals avoid subpixel brush scratches sparkling along thin tubes.
+  if(role==='brass'&&map==='normal')for(let i=0;i<original.data.length;i+=3){original.data[i]=128;original.data[i+1]=128;original.data[i+2]=255}
   if(map==='orm')for(let i=0;i<original.data.length;i+=original.info.channels){
    const rough=original.data[i+1]/255;
-   original.data[i]=role==='marble'?255:Math.max(210,original.data[i]);
-   original.data[i+1]=Math.round(255*(role==='limestone'?.65+.25*rough:role==='brass'?.27+.04*rough:.12+.22*rough));
+   original.data[i]=role==='limestone'?Math.max(210,original.data[i]):255;
+   original.data[i+1]=Math.round(255*(role==='limestone'?.65+.25*rough:role==='brass'?.53+.015*rough:.12+.22*rough));
    original.data[i+2]=role==='brass'?255:0;
   }
   // Sparse fine wear in the polished surface's roughness, never painted highlights.

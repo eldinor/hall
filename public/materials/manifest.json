@@ -99,37 +99,37 @@
         {
           "path": "brass/1024/albedo.webp",
           "size": 1024,
-          "sha256": "645293ae402606a075c21eb2c05575a978f4307fd732f2cb828cde2618637638",
+          "sha256": "4224c7e163b27b29f7fb19b0eb8be2f0d020f9069bef21e87e542e4d805afea0",
           "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/metal_plate/metal_plate_diff_2k.jpg"
         },
         {
           "path": "brass/2048/albedo.webp",
           "size": 2048,
-          "sha256": "be2ceb174f9b6287aa9aff5c207d3045c2610b26c97b835b0a34ac45c6be3eb1",
+          "sha256": "f593e940919ba1123bc65215c0503e03029f027ac324a7479379dfd457abfd19",
           "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/metal_plate/metal_plate_diff_2k.jpg"
         },
         {
           "path": "brass/1024/normal.png",
           "size": 1024,
-          "sha256": "596f7200493f07c1eec63a2d11946f18606a0ad333829fd157a1923ded439967",
+          "sha256": "aa170ca3c639aa0f409445b442f745fc7443fb4f7b7be40b0580809df1ee90da",
           "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/metal_plate/metal_plate_nor_gl_2k.jpg"
         },
         {
           "path": "brass/2048/normal.png",
           "size": 2048,
-          "sha256": "815b9e20659ea9c93cf44a21765ee8077ad31e7900f5bf78fcb491ed12b6f8e9",
+          "sha256": "dee0838635d9f3bf5c649d184deef808a582ea4e4128d300c1e651e919c38e57",
           "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/metal_plate/metal_plate_nor_gl_2k.jpg"
         },
         {
           "path": "brass/1024/orm.png",
           "size": 1024,
-          "sha256": "cfce07a06353af3d8842558b962e9438aa72a2d5eb5571c2dbb6bfd183dad23d",
+          "sha256": "cbcda76d55d33a0f140f407cea5125403fcd3b9bc4cdbd14520778d0f9a3c436",
           "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/metal_plate/metal_plate_arm_2k.jpg"
         },
         {
           "path": "brass/2048/orm.png",
           "size": 2048,
-          "sha256": "8b10d75d283f93a9d2fe7164101d42e889521308ed85c907fda50c48d63f7317",
+          "sha256": "6b80152e8cf9c55d90c90062d72ae7f8b5858c37db36b44ca220a0e6f8e6d6aa",
           "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/metal_plate/metal_plate_arm_2k.jpg"
         }
       ]

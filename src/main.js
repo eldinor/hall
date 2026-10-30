@@ -7,14 +7,28 @@ import {beveledBox,projectArchitecturalUVs} from './architecture.js';
 import {createArchitecturalMaterials} from './materials.js';
 import {createVisualSystem} from './visuals.js';
 import {createLanterns} from './lanterns.js';
+import {createAtmosphere} from './atmosphere.js';
+import {createRenderer,renderingSamples} from './renderer.js';
+import {createKeyboardNavigation} from './keyboard-navigation.js';
+import {createEntrancePortal} from './entrance-portal.js';
+import {createHubPortal} from './hub-portal.js';
+import {createRearGroundFog} from './rear-ground-fog.js';
 
-const $=s=>document.querySelector(s), canvas=$('#scene');
-try { start(); } catch(e) { console.error(e);$('#error').hidden=false;$('#loading').classList.add('done'); }
-function start(){
- const engine=new B.Engine(canvas,true,{stencil:true,preserveDrawingBuffer:true});engine.setHardwareScalingLevel(Math.min(window.devicePixelRatio,1.6)===window.devicePixelRatio?1:window.devicePixelRatio/1.6);
+const $=s=>document.querySelector(s);
+function startupError(error){console.error(error);document.documentElement.dataset.appState='error';$('#error').hidden=false}
+start().catch(startupError);
+async function start(){
+ const {engine,canvas,rendererInfo}=await createRenderer($('#scene'));
+ engine.setHardwareScalingLevel(Math.min(window.devicePixelRatio,1.6)===window.devicePixelRatio?1:window.devicePixelRatio/1.6);
  const scene=new B.Scene(engine);scene.clearColor=new B.Color4(.037,.031,.065,1);scene.fogMode=B.Scene.FOGMODE_EXP2;scene.fogDensity=.006;scene.fogColor=new B.Color3(.075,.06,.12);
  const v=(x,y,z)=>new B.Vector3(x,y,z), C=h=>B.Color3.FromHexString(h);
- const camera=new B.UniversalCamera('Visitor',v(0,4.6,-17),scene);camera.setTarget(v(2.7,8.5,28));camera.minZ=.15;camera.fov=.86;camera.speed=.42;camera.inertia=.8;camera.angularSensibility=4500;camera.attachControl(canvas,true);camera.keysUp=[87,38];camera.keysDown=[83,40];camera.keysLeft=[65,37];camera.keysRight=[68,39];
+ const spawnPosition=v(0,4.6,-15),spawnTarget=v(2.7,8.5,28);
+ const camera=new B.UniversalCamera('Visitor',spawnPosition.clone(),scene);camera.setTarget(spawnTarget);camera.minZ=.15;camera.fov=.86;camera.speed=.42;camera.inertia=.8;camera.angularSensibility=3600;camera.attachControl(canvas,true);camera.keysUp=[87,38];camera.keysDown=[83,40];camera.keysLeft=[65,37];camera.keysRight=[68,39];
+ scene.collisionsEnabled=true;camera.checkCollisions=true;
+ // Camera presets have different eye heights; the walking body stays on the floor.
+ camera.ellipsoid.set(.45,1,.45);
+ function syncWalkingCollider(){camera.ellipsoidOffset.y=2-camera.position.y}
+ syncWalkingCollider();scene.onBeforeAnimationsObservable.add(syncWalkingCollider);
  const hemi=new B.HemisphericLight('Vault ambient',v(0,1,0),scene);hemi.intensity=.35;hemi.diffuse=C('#b3abdc');hemi.groundColor=C('#49405c');
  const fill=new B.HemisphericLight('Blue window fill',v(-1,.4,0),scene);fill.intensity=.15;fill.diffuse=C('#9180db');
  const columnLights=[];
@@ -23,7 +37,7 @@ function start(){
  camera.maxZ=350;
  // HDR postprocessing runs on the visitor camera, including its intermediate MSAA target.
  const pipeline=new B.DefaultRenderingPipeline('EXALTED rendering',true,scene,[camera],false);
- pipeline.samples=engine.webGLVersion>1?Math.max(1,Math.min(4,engine.getCaps().maxMSAASamples)):1;
+ pipeline.samples=renderingSamples(engine,'cinematic');
  pipeline.fxaaEnabled=pipeline.samples<2;
  pipeline.bloomEnabled=true;
  pipeline.bloomThreshold=.85;
@@ -55,6 +69,10 @@ function start(){
  // Barrel vault shell, with structural ribs left fully readable against it.
  const vaultPaths=[];for(let j=0;j<2;j++){const p=[];for(let i=0;i<=80;i++){let t=Math.PI*i/80;p.push(v(12.5*Math.cos(t),15+9*Math.pow(Math.sin(t),.78),j?58:-20))}vaultPaths.push(p)}
  const roof=B.MeshBuilder.CreateRibbon('Continuous vaulted ceiling',{pathArray:vaultPaths,sideOrientation:B.Mesh.DOUBLESIDE},scene);roof.material=dark;
+ // Match the side-wall stone dado while leaving the entrance sky open above it.
+ const entranceBackWall=box('Entrance low back wall',26,2,1,0,1,-22,stone);
+ entranceBackWall.metadata={entranceBackWall:true};entranceBackWall.isPickable=false;entranceBackWall.checkCollisions=true;
+ const aisleLightBackZ=-19.8,aisleLightFrontZ=54.5;
  for(const side of [-1,1]){
  // Keep solid stone between the windows, with real openings behind the glass.
  box('Lower outer wall',1,5.3,80,side*13,2.65,18,dark);
@@ -82,8 +100,9 @@ function start(){
  }
  // The arcade above the exhibition frames echoes the larger nave ribs.
  for(let z=-2;z<51;z+=10)arch(side*11.3,z,9,10.5,4.4,.19,stone,true);
- box('Aisle gold light',.055,.035,73,side*10.2,.09,18,warm);
+ box('Aisle gold light',.055,.035,aisleLightFrontZ-aisleLightBackZ,side*10.2,.09,(aisleLightFrontZ+aisleLightBackZ)/2,warm);
  }
+ box('Entrance gold light',20.455,.035,.055,0,.09,aisleLightBackZ,warm);
  for(let z=-7;z<=53;z+=10){arch(0,z,23,12.5,11,.34,stone);arch(0,z-.28,22.7,12.4,10.8,.055,gold);
   for(let side of [-1,1]){const p=[];for(let i=0;i<=34;i++){const t=i/34;p.push(v(side*11.4*(1-t),12.7+10.6*Math.sin(t*Math.PI/2),z+5*t))}tube('Diagonal vault rib',p,.13,stone)}
   const boss=B.MeshBuilder.CreateSphere('Vault keystone',{diameter:.65,segments:12},scene);boss.position=v(0,23.5,z);boss.material=gold;
@@ -92,8 +111,7 @@ function start(){
  // Polished marble floor with real planar reflections.
  const floor=B.MeshBuilder.CreateGround('Polished marble floor',{width:28,height:84},scene);floor.position.z=18;
  floor.material=floorMat;
- let seed=302;const random=()=>{seed=(seed*16807)%2147483647;return seed/2147483647};
- const mirror=new B.MirrorTexture('Floor reflection',1024,scene,true);mirror.mirrorPlane=new B.Plane(0,-1,0,-.025);mirror.gammaSpace=false;mirror.level=.85;mirror.adaptiveBlurKernel=12;floorMat.reflectionTexture=mirror;
+ const mirror=new B.MirrorTexture('Floor reflection',1024,scene,true);mirror.mirrorPlane=new B.Plane(0,-1,0,-.025);mirror.renderParticles=false;mirror.gammaSpace=false;mirror.level=1.1;floorMat.reflectionTexture=mirror;
  for(let z=-22;z<60;z+=4){box('Floor transverse joint',26,.007,.025,0,.015,z,black)}for(let x=-12;x<=12;x+=4)box('Floor longitudinal joint',.025,.007,82,x,.018,18,black);
  for(const x of [-3,3])box('Central aisle brass inlay',.045,.02,76,x,.03,18,gold);
  for(let z=-8;z<50;z+=10){const ring=B.MeshBuilder.CreateTorus('Aisle medallion',{diameter:2.3,thickness:.025,tessellation:64},scene);ring.position=v(0,.035,z);ring.material=gold;const inner=B.MeshBuilder.CreateTorus('Inner medallion',{diameter:1.9,thickness:.018,tessellation:48},scene);inner.position=v(0,.04,z);inner.material=gold}
@@ -107,7 +125,10 @@ function start(){
   box('Exhibit backing',4.2,6.3,.24,0,4.35,0,black,root);
   for(const x of [-2.12,2.12]){box('Gilded upright',.09,6.5,.3,x,4.35,-.03,gold,root);box('Luminous inner edge',.022,6.26,.025,x*.965,4.35,-.19,i<4?warm:purple,root)}
   for(const y of [1.12,7.58]){box('Gilded lintel',4.32,.09,.3,0,y,-.03,gold,root);box('Luminous edge',4.1,.022,.025,0,y+(y<2?.09:-.09),-.19,i<4?warm:purple,root)}
-  const image=paintWorld(article),tex=new B.DynamicTexture('Original artwork '+i,image,scene,false);tex.update();const am=mat(article.title,'#ffffff');am.diffuseTexture=tex;am.emissiveTexture=tex;am.emissiveColor=new B.Color3(.7,.7,.7);am.specularColor=B.Color3.Black();
+  let tex;
+  if(article.cover){article.image=import.meta.env.BASE_URL+article.cover;tex=new B.Texture(article.image,scene,false,true,B.Texture.TRILINEAR_SAMPLINGMODE)}
+  else{const image=paintWorld(article);tex=new B.DynamicTexture('Original artwork '+i,image,scene,false);tex.update()}
+  const am=mat(article.title,'#ffffff');am.diffuseTexture=tex;am.emissiveTexture=tex;am.emissiveColor=new B.Color3(.7,.7,.7);am.specularColor=B.Color3.Black();
   const panel=B.MeshBuilder.CreatePlane('Artwork '+(i+1),{width:4.05,height:6.18,sideOrientation:B.Mesh.DOUBLESIDE},scene);panel.parent=root;panel.position=v(0,4.35,-.145);panel.material=am;panel.metadata={article:i};frames.push(panel);
   const emblem=B.MeshBuilder.CreatePolyhedron('Plinth crystal',{type:1,size:.15},scene);emblem.parent=root;emblem.position=v(0,.52,-.85);emblem.material=purple;
  });
@@ -120,15 +141,15 @@ function start(){
  const crystal=B.MeshBuilder.CreatePolyhedron('Floating astral crystal',{type:1,size:1.15},scene);crystal.position=v(0,7,52);crystal.material=purple;
  const wire=B.MeshBuilder.CreatePolyhedron('Astral brass cage',{type:1,size:1.6},scene);wire.position=crystal.position.clone();const wm=mat('Wire brass','#eac58c',1);wm.wireframe=true;wire.material=wm;
  const signTex=new B.DynamicTexture('Sanctuary inscription',{width:1024,height:256},scene,false),sg=signTex.getContext();sg.clearRect(0,0,1024,256);sg.textAlign='center';sg.fillStyle='#e6c692';sg.font='600 72px "Segoe UI", Arial, sans-serif';sg.fillText('EXALTED',512,110);sg.font='29px "Segoe UI", Arial, sans-serif';sg.fillText('Interactive 3D magazine',512,172);signTex.hasAlpha=true;signTex.update();const sm=mat('Gold inscription','#ffffff',.8);sm.diffuseTexture=signTex;sm.emissiveTexture=signTex;sm.useAlphaFromDiffuseTexture=true;const sign=B.MeshBuilder.CreatePlane('Hall inscription',{width:8,height:2},scene);sign.position=v(0,2.7,49);sign.material=sm;
- // Suspended dust is a single point mesh rather than hundreds of draw calls.
- const points=[];for(let i=0;i<100;i++)points.push(v((random()-.5)*22,random()*18+1,random()*74-15));const dust=B.MeshBuilder.CreateLineSystem('Ambient motes',{lines:points.map(p=>[p,p.add(v(.008,.02,0))]),updatable:true},scene);dust.color=C('#c6d8f5');dust.alpha=.25;dust.isPickable=false;dust.alwaysSelectAsActiveMesh=true;
- const dustPositions=new Float32Array(points.length*6);
  // Exhibit children must retain their parent so pedestals and frames billboard together.
  for(const mesh of scene.meshes)projectArchitecturalUVs(mesh);
- const groups=new Map();for(const m of [...scene.meshes]){if([floor,dust,crystal,wire,sign].includes(m)||m.metadata||m.parent)continue;m.computeWorldMatrix(true);if(!groups.has(m.material))groups.set(m.material,[]);groups.get(m.material).push(m)}
+ const groups=new Map();for(const m of [...scene.meshes]){if([floor,crystal,wire,sign].includes(m)||m.metadata||m.parent)continue;m.computeWorldMatrix(true);if(!groups.has(m.material))groups.set(m.material,[]);groups.get(m.material).push(m)}
  for(const meshes of groups.values()){if(meshes.length>1){const merged=B.Mesh.MergeMeshes(meshes,true,true,undefined,false,false);if(merged)merged.isPickable=false}}
- for(const mesh of scene.meshes)if(!mesh.parent&&!mesh.metadata?.skybox&&![dust,crystal,wire].includes(mesh))mesh.freezeWorldMatrix();
- scene.meshes.forEach(m=>{if(!m.metadata)m.isPickable=false});mirror.renderList=scene.meshes.filter(m=>m!==floor&&m!==dust);
+ for(const mesh of scene.meshes)if(!mesh.parent&&!mesh.metadata?.skybox&&![crystal,wire].includes(mesh))mesh.freezeWorldMatrix();
+ const entrancePortal=createEntrancePortal({scene,camera});
+ const hubPortal=createHubPortal({scene,camera});
+ const rearGroundFog=createRearGroundFog(scene);
+ scene.meshes.forEach(m=>{if(!m.metadata)m.isPickable=false});mirror.renderList=scene.meshes.filter(m=>m!==floor);
  // Create clustering after merging so Babylon's internal light proxy stays separate.
  if(B.ClusteredLightContainer.IsLightSupported(columnLights[0])){
   columnLightCluster=new B.ClusteredLightContainer('Column globe cluster',columnLights,scene);
@@ -139,33 +160,37 @@ function start(){
   for(const light of columnLights){light.setEnabled(false);scene.addLight(light)}
   for(const material of scene.materials)if(material instanceof B.StandardMaterial||material instanceof B.PBRMaterial)material.maxSimultaneousLights=2+fallbackLightCount;
  }
- const views={entrance:{pos:v(0,4.6,-17),target:v(2.7,8.5,28)},nave:{pos:v(0,3.1,10),target:v(0,9,49)},portal:{pos:v(0,3.2,37),target:v(0,7.5,55)}};let travel=null,touring=false,tourStartedAt=0,selected=0;
+ const views={entrance:{pos:spawnPosition,target:spawnTarget},nave:{pos:v(0,3.1,10),target:v(0,9,49)},portal:{pos:v(0,3.2,37),target:v(0,7.5,55)}};let travel=null,touring=false,tourStartedAt=0,selected=0;
  const tourDuration=30000;
  const tourHighlights=[{at:.2,article:0},{at:.4,article:5},{at:.6,article:2},{at:.8,article:7}];
  function moveTo(pos,target,duration=2200){const proxy=new B.UniversalCamera('pose',pos,scene);proxy.setTarget(target);travel={from:camera.position.clone(),to:pos.clone(),r0:camera.rotation.clone(),r1:proxy.rotation.clone(),time:0,duration};proxy.dispose()}
  function setView(name){stopTour();document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===name));moveTo(views[name].pos,views[name].target)}
  function stopTour(){touring=false;$('#tour').innerHTML='▷ <span>Guided tour</span>'}
  document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));
- canvas.addEventListener('wheel',e=>{if($('#article').open||$('#controls').open)return;e.preventDefault();stopTour();travel=null;const direction=camera.getForwardRay().direction;camera.position.addInPlace(direction.scale(Math.sign(e.deltaY)*1.15));},{passive:false});
- canvas.addEventListener('keydown',()=>{stopTour();travel=null;document.body.classList.add('exploring')});canvas.addEventListener('pointerdown',()=>{travel=null;stopTour()});
+ canvas.addEventListener('wheel',e=>{if($('#article').open||$('#controls').open)return;e.preventDefault();stopTour();travel=null;syncWalkingCollider();const direction=camera.getForwardRay().direction;camera._collideWithWorld(direction.scale(Math.sign(e.deltaY)*1.15));},{passive:false});
+ function resumeNavigation(){if(document.querySelector('dialog[open]'))return;camera.attachControl(canvas,true);canvas.focus({preventScroll:true})}
+ const keyboardNavigation=createKeyboardNavigation({scene,camera,canvas,onNavigate:()=>{camera.attachControl(canvas,true);stopTour();travel=null;document.body.classList.add('exploring')}});
+ canvas.addEventListener('keydown',()=>{stopTour();travel=null;document.body.classList.add('exploring')});canvas.addEventListener('pointerdown',()=>{travel=null;stopTour();resumeNavigation()});
  scene.onPointerObservable.add(info=>{if(info.type===B.PointerEventTypes.POINTERTAP&&info.pickInfo?.pickedMesh?.metadata?.article!==undefined)openArticle(info.pickInfo.pickedMesh.metadata.article);if(info.type===B.PointerEventTypes.POINTERMOVE)canvas.style.cursor=info.pickInfo?.pickedMesh?.metadata?'pointer':'grab'});
  function openArticle(i){selected=(i+8)%8;const a=articles[selected];$('#article-art').style.backgroundImage=`url(${a.image})`;$('#article-category').textContent=a.category;$('#article-title').textContent=a.title;$('#article-description').textContent=a.description;$('#article-index').textContent=`${String(selected+1).padStart(2,'0')} / 08`;if(!$('#article').open){stopTour();$('#article').showModal();camera.detachControl()} }
- $('#close').onclick=()=>$('#article').close();$('#article').addEventListener('close',()=>camera.attachControl(canvas,true));$('#previous').onclick=()=>openArticle(selected-1);$('#next').onclick=()=>openArticle(selected+1);
- $('#help').onclick=()=>{$('#controls').showModal();camera.detachControl()};$('#close-help').onclick=$('#got-it').onclick=()=>$('#controls').close();$('#controls').addEventListener('close',()=>camera.attachControl(canvas,true));
- $('#tour').onclick=()=>{if(touring){stopTour();return}touring=true;tourStartedAt=performance.now();travel=null;$('#tour').innerHTML='Ⅱ <span>Pause tour</span>';};
+ $('#close').onclick=()=>$('#article').close();$('#article').addEventListener('close',resumeNavigation);$('#previous').onclick=()=>openArticle(selected-1);$('#next').onclick=()=>openArticle(selected+1);
+ $('#help').onclick=()=>{$('#controls').showModal();camera.detachControl()};$('#close-help').onclick=$('#got-it').onclick=()=>$('#controls').close();$('#controls').addEventListener('close',resumeNavigation);
+ $('#tour').onclick=()=>{if(touring){stopTour();return}keyboardNavigation.clear();camera.movement.resetPanVelocity();camera.movement.resetRotationVelocity();camera.cameraDirection.setAll(0);camera.cameraRotation.set(0,0);camera.position.copyFrom(views.entrance.pos);camera.setTarget(views.entrance.target);touring=true;tourStartedAt=performance.now();travel=null;$('#tour').innerHTML='Ⅱ <span>Pause tour</span>';};
  $('#fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen()}catch(e){console.warn('Fullscreen unavailable',e)}};
  let audio=null;$('#sound').onclick=async()=>{if(!audio){const ac=new(window.AudioContext||window.webkitAudioContext)(),gain=ac.createGain();gain.gain.value=.018;gain.connect(ac.destination);[65.41,98,130.81,196.0].forEach((f,i)=>{const o=ac.createOscillator();o.type='sine';o.frequency.value=f;o.detune.value=i*3;o.connect(gain);o.start()});audio=ac;await ac.resume()}else if(audio.state==='running')await audio.suspend();else await audio.resume();const on=audio.state==='running';$('#sound').innerHTML=`♫ <span>SOUND ${on?'ON':'OFF'}</span>`;$('#sound').setAttribute('aria-label',`${on?'Disable':'Enable'} ambient sound`)};
- const visuals=createVisualSystem({scene,engine,camera,pipeline,mirror,surfaces,windowGlass,dust,columnLightCluster});
- const lightingDebug=createLightingDebug({scene,camera,canvas,ambient:hemi,fill,columnLights,columnLightCluster,columnLightColors,lanterns,frames,windowGlass,pipeline,imageProcessing,visuals,Color3:B.Color3});
+ const atmosphere=createAtmosphere(scene,lanterns);
+ const visuals=createVisualSystem({scene,engine,camera,pipeline,mirror,surfaces,windowGlass,atmosphere,hubPortal,columnLightCluster});
+ const lightingDebug=createLightingDebug({scene,camera,canvas,rendererInfo,ambient:hemi,fill,columnLights,columnLightCluster,columnLightColors,lanterns,frames,windowGlass,pipeline,imageProcessing,visuals,Color3:B.Color3});
  visuals.setProfile=qualityProfile=>lightingDebug.setSettings({qualityProfile});
  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
  scene.onBeforeRenderObservable.add(()=>{let dt=Math.min(engine.getDeltaTime(),50);if(!reduced){lanterns.update(dt);crystal.rotation.y+=dt*.00025;wire.rotation.y-=dt*.00013;crystal.position.y=7+Math.sin(performance.now()*.0007)*.2}
-  if(!reduced&&dust.isEnabled()){const t=performance.now()*.001;for(let i=0;i<points.length;i++){const p=points[i],x=p.x+Math.sin(t*.15+i)*.1,y=1+(p.y+t*.025)%18;dustPositions.set([x,y,p.z,x+.008,y+.02,p.z],i*6)}dust.updateVerticesData(B.VertexBuffer.PositionKind,dustPositions,false,false)}
   if(travel){travel.time+=dt;let t=Math.min(1,travel.time/travel.duration);t=t*t*(3-2*t);camera.position=B.Vector3.Lerp(travel.from,travel.to,t);camera.rotation=B.Vector3.Lerp(travel.r0,travel.r1,t);if(t>=1)travel=null}
   if(touring){
    const t=Math.min((performance.now()-tourStartedAt)/tourDuration,1);
-   camera.position=v(Math.sin(t*Math.PI*4)*1.4,3.6,-13+t*57);
-   let target=v(0,7.5,camera.position.z+19);
+   const pathT=t*t*(3-2*t);
+   camera.position=B.Vector3.Lerp(views.entrance.pos,views.portal.pos,pathT);
+   camera.position.x+=Math.sin(t*Math.PI*4)*Math.sin(t*Math.PI)*1.4;
+   let target=B.Vector3.Lerp(views.entrance.target,views.portal.target,pathT);
    // Ease toward alternating exhibits, briefly hold the gaze, then face forward.
    for(const highlight of tourHighlights){
     const distance=Math.abs(t-highlight.at);
@@ -175,7 +200,11 @@ function start(){
    }
    camera.setTarget(target);if(t>=1)stopTour();
   }
-  camera.position.x=B.Scalar.Clamp(camera.position.x,-9.3,9.3);camera.position.z=B.Scalar.Clamp(camera.position.z,-20,47);camera.position.y=B.Scalar.Clamp(camera.position.y,2.2,10);
+  camera.position.x=B.Scalar.Clamp(camera.position.x,-9.3,9.3);camera.position.z=B.Scalar.Clamp(camera.position.z,-23,47);camera.position.y=B.Scalar.Clamp(camera.position.y,2.2,10);
+  const portalInteractionEnabled=document.documentElement.dataset.appState==='ready'&&!touring&&!travel&&!document.querySelector('dialog[open]');
+  entrancePortal.update(dt/1000,portalInteractionEnabled);
+  hubPortal.update(dt/1000,portalInteractionEnabled);
+  rearGroundFog.update(dt/1000);
   if(!columnLightCluster){
    const nearest=[...columnLights].sort((a,b)=>B.Vector3.DistanceSquared(a.position,camera.position)-B.Vector3.DistanceSquared(b.position,camera.position)).slice(0,fallbackLightCount);
    for(const light of columnLights){const enabled=nearest.includes(light);if(light.isEnabled()!==enabled)light.setEnabled(enabled)}
@@ -183,7 +212,18 @@ function start(){
   // Update once for the visitor camera so floor reflections share the same pose.
   for(const panel of frames){const root=panel.parent;const dx=root.position.x-camera.position.x,dz=root.position.z-camera.position.z;if(dx*dx+dz*dz>.0001)root.rotation.y=Math.atan2(dx,dz)}
  });
- scene.executeWhenReady(()=>{$('#loading').classList.add('done')});engine.runRenderLoop(()=>scene.render());window.addEventListener('resize',()=>engine.resize());
+ // Keep the HTML loader up until all surface maps and scene resources are
+ // ready, then let a complete rendered frame reach the canvas before revealing UI.
+ Promise.all([visuals.ready,scene.whenReadyAsync()]).then(()=>{
+  scene.onAfterRenderObservable.addOnce(()=>requestAnimationFrame(()=>{
+   document.documentElement.dataset.appState='ready';
+   $('#loading').classList.add('done');$('#loading').setAttribute('aria-hidden','true');
+   // Camera keyboard events are delivered only to the focused input canvas.
+   // Preserve focus if the visitor has already started interacting with a control.
+   if(document.activeElement===document.body)resumeNavigation();
+  }));
+ }).catch(startupError);
+ engine.runRenderLoop(()=>scene.render());window.addEventListener('resize',()=>engine.resize());
  // Exposed read-only diagnostics and inspection helpers for browser QA.
- window.hall={scene,camera,frames,articles,setView,openArticle,engine,pipeline,columnLights,columnLightCluster,lightingDebug,windowGlass,visuals,lanterns,get qualityProfile(){return visuals.getProfile()},get renderMetrics(){return visuals.getMetrics()}};
+ window.hall={scene,camera,frames,articles,setView,openArticle,engine,rendererInfo,pipeline,columnLights,columnLightCluster,lightingDebug,windowGlass,visuals,lanterns,atmosphere,entrancePortal,hubPortal,rearGroundFog,get qualityProfile(){return visuals.getProfile()},get renderMetrics(){return visuals.getMetrics()}};
 }

@@ -7,7 +7,7 @@ export const articles = [
   ['Embers of Tomorrow','FUTURES · 06','A golden dusk settles over the spires of a future city. Between memory and invention, a new world begins to take shape, one luminous window at a time.','#f3be8c','#8a4152'],
   ['The Silent Observatory','REFLECTIONS · 07','High above the cloud line, an observatory listens to the sky. Its keepers have learned that the greatest discoveries often begin with a moment of stillness.','#9ddcdb','#234855'],
   ['A World Beyond','IMAGINATION · 08','The final frame is an invitation. Beyond this mountain range lies an unwritten world, waiting for the next traveller to give it a story.','#dcb3ed','#5b3675']
-].map(([title,category,description,light,dark],i)=>({title,category,description,light,dark,index:i}));
+].map(([title,category,description,light,dark],i)=>({title,category,description,light,dark,index:i,cover:i===2?'covers/halloween_comic_whatever_fixed.webp':null}));
 
 // Original, seeded canvas studies: no external image requests or missing assets.
 export function paintWorld(item) {
