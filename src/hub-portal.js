@@ -1,4 +1,6 @@
 import * as B from 'babylonjs';
+
+const hubDestination='https://alpha.exalted8.com/hub';
 import vertexWGSL from './shaders/entrance-portal/portal.vertex.wgsl?raw';
 import ringWGSL from './shaders/entrance-portal/ring.fragment.wgsl?raw';
 import surfaceWGSL from './shaders/entrance-portal/surface.fragment.wgsl?raw';
@@ -39,6 +41,7 @@ export function createHubPortal({scene,camera}){
  for(const [at,color]of [[0,new B.Color4(.3,.85,1.4,0)],[.12,new B.Color4(.3,.85,1.4,.9)],[.5,new B.Color4(.03,.3,1.25,.8)],[1,new B.Color4(0,.08,.8,0)]])flames.addColorGradient(at,color);
  const motion=window.matchMedia('(prefers-reduced-motion: reduce)');let time=0,enabled=false,profile='cinematic';
  const prompt=document.createElement('p');prompt.id='hub-portal-prompt';prompt.className='portal-prompt';prompt.hidden=true;prompt.setAttribute('role','status');prompt.setAttribute('aria-live','polite');document.body.append(prompt);
+ const horizontalInteractionRadius=7;
  const toPortal=new B.Vector3();let interactionEnabled=false,canInteract=false,activationCount=0,confirmationUntil=0;
  function refreshPrompt(){
   const focusedControl=document.activeElement?.closest('#light-debug,input,textarea,select,[contenteditable]:not([contenteditable="false"])');
@@ -48,12 +51,12 @@ export function createHubPortal({scene,camera}){
    // The visitor's eye is above this floor portal: proximity is measured on
    // the floor, while facing still uses the full 3D direction toward its centre.
    const distance=toPortal.length();
-   if(toPortal.x*toPortal.x+toPortal.z*toPortal.z<=3.5*3.5&&Math.abs(toPortal.y)<=6&&distance>.05){
+   if(toPortal.x*toPortal.x+toPortal.z*toPortal.z<=horizontalInteractionRadius*horizontalInteractionRadius&&Math.abs(toPortal.y)<=6&&distance>.05){
     toPortal.scaleInPlace(1/distance);canInteract=B.Vector3.Dot(camera.getForwardRay().direction,toPortal)>=.75;
    }
   }
   prompt.hidden=!canInteract;
-  const message=performance.now()<confirmationUntil?'Hub portal event fired':'Press E to enter the Hub';
+  const message=performance.now()<confirmationUntil?'Opening the Hub…':'Press E to enter the Hub';
   if(prompt.textContent!==message)prompt.textContent=message;
  }
  function keydown(event){
@@ -61,8 +64,9 @@ export function createHubPortal({scene,camera}){
   if(!isE||event.repeat||event.ctrlKey||event.altKey||event.metaKey||event.isComposing)return;
   refreshPrompt();if(!canInteract)return;
   event.preventDefault();event.stopPropagation();activationCount++;confirmationUntil=performance.now()+2500;
-  window.dispatchEvent(new CustomEvent('exalted:portal-entered',{detail:{id:'gallery-hub-portal',position:{x:root.position.x,y:root.position.y,z:root.position.z},destination:null}}));
+  const proceed=window.dispatchEvent(new CustomEvent('exalted:portal-entered',{cancelable:true,detail:{id:'gallery-hub-portal',position:{x:root.position.x,y:root.position.y,z:root.position.z},destination:hubDestination}}));
   refreshPrompt();
+  if(proceed)window.location.assign(hubDestination);
  }
  const blur=()=>{canInteract=false;prompt.hidden=true};
  document.addEventListener('keydown',keydown,true);document.addEventListener('focusin',refreshPrompt);window.addEventListener('blur',blur);
@@ -70,5 +74,5 @@ export function createHubPortal({scene,camera}){
  function configure(settings){profile=settings.qualityProfile;flames.emitRate=profile==='performance'?55:110;if(gpu)flames.activeParticleCount=profile==='performance'?128:256;sync()}
  function update(dt,allowInteraction=true){sync();if(!motion.matches)time+=dt;for(const mesh of [ring,surface]){mesh.material.setFloat('portalTime',time);mesh.material.setVector3('cameraPos',camera.position)}interactionEnabled=allowInteraction;refreshPrompt()}
  scene.onDisposeObservable.add(()=>{document.removeEventListener('keydown',keydown,true);document.removeEventListener('focusin',refreshPrompt);window.removeEventListener('blur',blur);prompt.remove();flames.dispose(false);flameTexture.dispose();labelTexture.dispose();for(const mesh of meshes){mesh.material.dispose();mesh.dispose()}root.dispose()});
- return {root,ring,surface,label,flames,configure,update,getState:()=>({position:root.position.asArray(),profile,time,flamesEnabled:enabled,particleBackend:gpu?'gpu':'cpu',activeFlames:flames.getActiveCount(),canInteract,activationCount,destination:null})};
+ return {root,ring,surface,label,flames,configure,update,getState:()=>({position:root.position.asArray(),profile,time,flamesEnabled:enabled,particleBackend:gpu?'gpu':'cpu',activeFlames:flames.getActiveCount(),canInteract,activationCount,horizontalInteractionRadius,destination:hubDestination})};
 }

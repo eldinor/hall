@@ -13,12 +13,15 @@ import {createKeyboardNavigation} from './keyboard-navigation.js';
 import {createEntrancePortal} from './entrance-portal.js';
 import {createHubPortal} from './hub-portal.js';
 import {createRearGroundFog} from './rear-ground-fog.js';
+import {loadingPhase,finishLoading} from './loading.js';
 
 const $=s=>document.querySelector(s);
 function startupError(error){console.error(error);document.documentElement.dataset.appState='error';$('#error').hidden=false}
 start().catch(startupError);
 async function start(){
+ await loadingPhase('creating device',.05);
  const {engine,canvas,rendererInfo}=await createRenderer($('#scene'));
+ await loadingPhase('building scene',.12);
  engine.setHardwareScalingLevel(Math.min(window.devicePixelRatio,1.6)===window.devicePixelRatio?1:window.devicePixelRatio/1.6);
  const scene=new B.Scene(engine);scene.clearColor=new B.Color4(.037,.031,.065,1);scene.fogMode=B.Scene.FOGMODE_EXP2;scene.fogDensity=.006;scene.fogColor=new B.Color3(.075,.06,.12);
  const v=(x,y,z)=>new B.Vector3(x,y,z), C=h=>B.Color3.FromHexString(h);
@@ -117,19 +120,22 @@ async function start(){
  for(let z=-8;z<50;z+=10){const ring=B.MeshBuilder.CreateTorus('Aisle medallion',{diameter:2.3,thickness:.025,tessellation:64},scene);ring.position=v(0,.035,z);ring.material=gold;const inner=B.MeshBuilder.CreateTorus('Inner medallion',{diameter:1.9,thickness:.018,tessellation:48},scene);inner.position=v(0,.04,z);inner.material=gold}
  const frames=[];
  articles.forEach((article,i)=>{
-  const side=i<4?-1:1,z=2+(i%4)*11;const root=new B.TransformNode('Exhibit '+(i+1),scene);root.position=v(side*7.8,0,z);
+  const side=i%2===0?-1:1,z=2+Math.floor(i/2)*11;const root=new B.TransformNode('Exhibit '+(i+1),scene);root.position=v(side*7.8,0,z);
   // Cylindrical billboards use the exhibit's -Z article face and stay level.
   root.rotation.y=Math.atan2(root.position.x-camera.position.x,root.position.z-camera.position.z);
   const plinth=box('Black marble pedestal',4.55,.95,1.65,0,.48,0,black,root);plinth.material=black;
   box('Pedestal brass foot',4.65,.065,1.75,0,.08,0,warm,root);box('Pedestal cornice',4.75,.16,1.85,0,.99,0,gold,root);
   box('Exhibit backing',4.2,6.3,.24,0,4.35,0,black,root);
-  for(const x of [-2.12,2.12]){box('Gilded upright',.09,6.5,.3,x,4.35,-.03,gold,root);box('Luminous inner edge',.022,6.26,.025,x*.965,4.35,-.19,i<4?warm:purple,root)}
-  for(const y of [1.12,7.58]){box('Gilded lintel',4.32,.09,.3,0,y,-.03,gold,root);box('Luminous edge',4.1,.022,.025,0,y+(y<2?.09:-.09),-.19,i<4?warm:purple,root)}
+  for(const x of [-2.12,2.12]){box('Gilded upright',.09,6.5,.3,x,4.35,-.03,gold,root);box('Luminous inner edge',.022,6.26,.025,x*.965,4.35,-.19,side<0?warm:purple,root)}
+  for(const y of [1.12,7.58]){box('Gilded lintel',4.32,.09,.3,0,y,-.03,gold,root);box('Luminous edge',4.1,.022,.025,0,y+(y<2?.09:-.09),-.19,side<0?warm:purple,root)}
   let tex;
-  if(article.cover){article.image=import.meta.env.BASE_URL+article.cover;tex=new B.Texture(article.image,scene,false,true,B.Texture.TRILINEAR_SAMPLINGMODE)}
+  if(article.cover){article.image=import.meta.env.BASE_URL+article.cover;tex=new B.Texture(article.image,scene,false,true,B.Texture.TRILINEAR_SAMPLINGMODE);tex.wrapU=tex.wrapV=B.Texture.CLAMP_ADDRESSMODE}
   else{const image=paintWorld(article);tex=new B.DynamicTexture('Original artwork '+i,image,scene,false);tex.update()}
   const am=mat(article.title,'#ffffff');am.diffuseTexture=tex;am.emissiveTexture=tex;am.emissiveColor=new B.Color3(.7,.7,.7);am.specularColor=B.Color3.Black();
-  const panel=B.MeshBuilder.CreatePlane('Artwork '+(i+1),{width:4.05,height:6.18,sideOrientation:B.Mesh.DOUBLESIDE},scene);panel.parent=root;panel.position=v(0,4.35,-.145);panel.material=am;panel.metadata={article:i};frames.push(panel);
+  if(article.paragraphs){am.disableLighting=true;am.fogEnabled=false;am.diffuseTexture=null;am.diffuseColor=B.Color3.Black();am.emissiveColor=B.Color3.Black();am.metadata={textureOnlyGlow:true}}
+  // Fit supplied portraits inside the existing vitrine; backing and frame stay fixed.
+  const imageAspect=article.coverAspect??4.05/6.18;
+  const panel=B.MeshBuilder.CreatePlane('Artwork '+(i+1),{width:Math.min(4.05,6.18*imageAspect),height:Math.min(6.18,4.05/imageAspect),sideOrientation:B.Mesh.DOUBLESIDE},scene);panel.parent=root;panel.position=v(0,4.35,-.145);panel.material=am;panel.metadata={article:i};frames.push(panel);
   const emblem=B.MeshBuilder.CreatePolyhedron('Plinth crystal',{type:1,size:.15},scene);emblem.parent=root;emblem.position=v(0,.52,-.85);emblem.material=purple;
  });
  // The final portal repeats the arch motif in nested, luminous layers.
@@ -137,10 +143,16 @@ async function start(){
  for(let i=0;i<4;i++){box('Sanctuary step',13-i*1.3,.25,6-i*.8,0,.13+i*.25,51+i*.55,stone);box('Step lighting',13-i*1.3,.025,.035,0,.27+i*.25,48+i*.95,warm)}
  for(let i=0;i<4;i++)arch(0,56-i*.35,8+i*1.15,10,6+i*.6,.14,i%2?gold:stone);
  arch(0,54.5,7.5,10,5.6,.04,purple);
- const portalMat=mat('Portal twilight','#473579',.5);const portal=B.MeshBuilder.CreatePlane('Portal field',{width:7,height:13},scene);portal.position=v(0,7.5,56.5);portal.material=portalMat;
- const crystal=B.MeshBuilder.CreatePolyhedron('Floating astral crystal',{type:1,size:1.15},scene);crystal.position=v(0,7,52);crystal.material=purple;
- const wire=B.MeshBuilder.CreatePolyhedron('Astral brass cage',{type:1,size:1.6},scene);wire.position=crystal.position.clone();const wm=mat('Wire brass','#eac58c',1);wm.wireframe=true;wire.material=wm;
- const signTex=new B.DynamicTexture('Sanctuary inscription',{width:1024,height:256},scene,false),sg=signTex.getContext();sg.clearRect(0,0,1024,256);sg.textAlign='center';sg.fillStyle='#e6c692';sg.font='600 72px "Segoe UI", Arial, sans-serif';sg.fillText('EXALTED',512,110);sg.font='29px "Segoe UI", Arial, sans-serif';sg.fillText('Interactive 3D magazine',512,172);signTex.hasAlpha=true;signTex.update();const sm=mat('Gold inscription','#ffffff',.8);sm.diffuseTexture=signTex;sm.emissiveTexture=signTex;sm.useAlphaFromDiffuseTexture=true;const sign=B.MeshBuilder.CreatePlane('Hall inscription',{width:8,height:2},scene);sign.position=v(0,2.7,49);sign.material=sm;
+ // Contain the complete 1086 x 1448 cover inside the former 7 x 13 portal field.
+ const coverAspect=1086/1448,coverWidth=7,coverHeight=coverWidth/coverAspect;
+ const coverTexture=new B.Texture(`${import.meta.env.BASE_URL}covers/Exalted_Jaina_Cover_Smaller_Type.webp`,scene);
+ coverTexture.wrapU=coverTexture.wrapV=B.Texture.CLAMP_ADDRESSMODE;coverTexture.anisotropicFilteringLevel=8;coverTexture.level=.8;
+ const portalMat=mat('Central magazine cover','#ffffff');portalMat.disableLighting=true;portalMat.fogEnabled=false;portalMat.specularColor=B.Color3.Black();portalMat.emissiveTexture=coverTexture;
+ const portal=B.MeshBuilder.CreatePlane('Portal field',{width:coverWidth,height:coverHeight},scene);portal.position=v(0,7.5,56.5);portal.material=portalMat;
+ const crystalHeight=7;
+ const crystal=B.MeshBuilder.CreatePolyhedron('Floating astral crystal',{type:1,size:1.15},scene);crystal.position=v(0,crystalHeight,52);crystal.scaling.setAll(.55);crystal.material=purple;
+ const wire=B.MeshBuilder.CreatePolyhedron('Astral brass cage',{type:1,size:1.6},scene);wire.position=crystal.position.clone();wire.scaling.setAll(.55);const wm=mat('Wire brass','#eac58c',1);wm.wireframe=true;wire.material=wm;
+ const signTex=new B.DynamicTexture('Sanctuary inscription',{width:1024,height:256},scene,false),sg=signTex.getContext();sg.clearRect(0,0,1024,256);sg.textAlign='center';sg.fillStyle='#e6c692';sg.font='600 72px "Segoe UI", Arial, sans-serif';sg.fillText('EXALTED',512,110);sg.font='29px "Segoe UI", Arial, sans-serif';sg.fillText('Interactive 3D magazine',512,172);signTex.hasAlpha=true;signTex.update();const sm=mat('Gold inscription','#ffffff',.8);sm.diffuseTexture=signTex;sm.emissiveTexture=signTex;sm.useAlphaFromDiffuseTexture=true;const sign=B.MeshBuilder.CreatePlane('Hall inscription',{width:8,height:2},scene);sign.position=v(0,1.6,49);sign.material=sm;
  // Exhibit children must retain their parent so pedestals and frames billboard together.
  for(const mesh of scene.meshes)projectArchitecturalUVs(mesh);
  const groups=new Map();for(const m of [...scene.meshes]){if([floor,crystal,wire,sign].includes(m)||m.metadata||m.parent)continue;m.computeWorldMatrix(true);if(!groups.has(m.material))groups.set(m.material,[]);groups.get(m.material).push(m)}
@@ -160,10 +172,17 @@ async function start(){
   for(const light of columnLights){light.setEnabled(false);scene.addLight(light)}
   for(const material of scene.materials)if(material instanceof B.StandardMaterial||material instanceof B.PBRMaterial)material.maxSimultaneousLights=2+fallbackLightCount;
  }
- const views={entrance:{pos:spawnPosition,target:spawnTarget},nave:{pos:v(0,3.1,10),target:v(0,9,49)},portal:{pos:v(0,3.2,37),target:v(0,7.5,55)}};let travel=null,touring=false,tourStartedAt=0,selected=0;
+ const views={entrance:{pos:spawnPosition,target:spawnTarget},nave:{pos:v(0,3.1,10),target:v(0,9,49)},portal:{pos:v(0,3.2,37),target:v(0,5,55)}};let travel=null,touring=false,tourStartedAt=0,selected=0;
  const tourDuration=30000;
- const tourHighlights=[{at:.2,article:0},{at:.4,article:5},{at:.6,article:2},{at:.8,article:7}];
- function moveTo(pos,target,duration=2200){const proxy=new B.UniversalCamera('pose',pos,scene);proxy.setTarget(target);travel={from:camera.position.clone(),to:pos.clone(),r0:camera.rotation.clone(),r1:proxy.rotation.clone(),time:0,duration};proxy.dispose()}
+ const tourHighlights=[{at:.2,article:0},{at:.4,article:3},{at:.6,article:4},{at:.8,article:7}];
+ function moveTo(pos,target,duration=2200){
+  keyboardNavigation.clear();camera.movement.resetPanVelocity();camera.movement.resetRotationVelocity();camera.cameraDirection.setAll(0);camera.cameraRotation.set(0,0);
+  const proxy=new B.UniversalCamera('pose',pos,scene);proxy.setTarget(target);
+  const fromRotation=camera.rotation.clone(),toRotation=proxy.rotation.clone();
+  const yaw=toRotation.y-fromRotation.y;
+  toRotation.y=fromRotation.y+Math.atan2(Math.sin(yaw),Math.cos(yaw));
+  travel={from:camera.position.clone(),to:pos.clone(),r0:fromRotation,r1:toRotation,time:0,duration};proxy.dispose();
+ }
  function setView(name){stopTour();document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===name));moveTo(views[name].pos,views[name].target)}
  function stopTour(){touring=false;$('#tour').innerHTML='▷ <span>Guided tour</span>'}
  document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));
@@ -172,18 +191,68 @@ async function start(){
  const keyboardNavigation=createKeyboardNavigation({scene,camera,canvas,onNavigate:()=>{camera.attachControl(canvas,true);stopTour();travel=null;document.body.classList.add('exploring')}});
  canvas.addEventListener('keydown',()=>{stopTour();travel=null;document.body.classList.add('exploring')});canvas.addEventListener('pointerdown',()=>{travel=null;stopTour();resumeNavigation()});
  scene.onPointerObservable.add(info=>{if(info.type===B.PointerEventTypes.POINTERTAP&&info.pickInfo?.pickedMesh?.metadata?.article!==undefined)openArticle(info.pickInfo.pickedMesh.metadata.article);if(info.type===B.PointerEventTypes.POINTERMOVE)canvas.style.cursor=info.pickInfo?.pickedMesh?.metadata?'pointer':'grab'});
- function openArticle(i){selected=(i+8)%8;const a=articles[selected];$('#article-art').style.backgroundImage=`url(${a.image})`;$('#article-category').textContent=a.category;$('#article-title').textContent=a.title;$('#article-description').textContent=a.description;$('#article-index').textContent=`${String(selected+1).padStart(2,'0')} / 08`;if(!$('#article').open){stopTour();$('#article').showModal();camera.detachControl()} }
+ function renderArticleBody(expanded=false){
+  const article=articles[selected],paragraphs=article.paragraphs||[article.description];
+  const showingPreview=!expanded&&!!article.preview;
+  const visibleParagraphs=showingPreview?[article.preview]:paragraphs.slice(0,expanded?paragraphs.length:1);
+  $('#article-description').replaceChildren(...visibleParagraphs.map((text,index)=>{
+   const paragraph=document.createElement('p'),runs=showingPreview?null:article.formattedParagraphs?.[index]?.runs;
+   if(!runs){paragraph.textContent=text;return paragraph}
+   // Word runs are content only: build safe text nodes and semantic formatting.
+   for(const run of runs){
+    let node=document.createTextNode(run.text);
+    if(run.italic){const emphasis=document.createElement('em');emphasis.append(node);node=emphasis}
+    if(run.bold){const strong=document.createElement('strong');strong.append(node);node=strong}
+    paragraph.append(node);
+   }
+   return paragraph;
+  }));
+  $('#read-more').hidden=expanded||paragraphs.length<=1;
+  $('#read-more').setAttribute('aria-expanded',String(expanded));
+ }
+ function openArticle(i){
+  selected=(i+8)%8;const article=articles[selected];
+  $('#article-art').style.backgroundImage=`url(${article.image})`;
+  const enlargeable=article.artSeed===2;
+  $('#article-art').classList.toggle('can-expand',enlargeable);
+  if(enlargeable){$('#article-art').setAttribute('role','button');$('#article-art').tabIndex=0;$('#article-art').setAttribute('aria-label','Enlarge Halloween artwork');$('#article-art').setAttribute('aria-haspopup','dialog')}
+  else for(const attribute of ['role','tabindex','aria-label','aria-haspopup'])$('#article-art').removeAttribute(attribute);
+  $('#article-category').textContent=article.category;$('#article-title').textContent=article.title;
+  for(const key of ['subtitle','byline']){const element=$('#article-'+key);element.textContent=article[key]||'';element.hidden=!article[key]}
+  renderArticleBody();
+  $('#article').classList.toggle('has-full-article',!!article.paragraphs);
+  $('#article .article-note').hidden=!!article.paragraphs;
+  $('#article-index').textContent=`${String(selected+1).padStart(2,'0')} / 08`;
+  if(!$('#article').open){stopTour();$('#article').showModal();camera.detachControl()}
+  $('#article').scrollTop=0;
+ }
+ $('#read-more').onclick=()=>renderArticleBody(true);
+ function enlargeArtwork(){const article=articles[selected];if(article.artSeed!==2)return;$('#enlarged-artwork').src=article.image;$('#enlarged-artwork').alt=article.title;$('#artwork-viewer').showModal()}
+ $('#article-art').onclick=enlargeArtwork;
+ $('#article-art').addEventListener('keydown',event=>{if(articles[selected].artSeed===2&&(event.key==='Enter'||event.key===' ')){event.preventDefault();enlargeArtwork()}});
+ $('#close-artwork').onclick=()=>$('#artwork-viewer').close();
+ $('#artwork-viewer').addEventListener('click',event=>{if(event.target===$('#artwork-viewer'))$('#artwork-viewer').close()});
  $('#close').onclick=()=>$('#article').close();$('#article').addEventListener('close',resumeNavigation);$('#previous').onclick=()=>openArticle(selected-1);$('#next').onclick=()=>openArticle(selected+1);
  $('#help').onclick=()=>{$('#controls').showModal();camera.detachControl()};$('#close-help').onclick=$('#got-it').onclick=()=>$('#controls').close();$('#controls').addEventListener('close',resumeNavigation);
  $('#tour').onclick=()=>{if(touring){stopTour();return}keyboardNavigation.clear();camera.movement.resetPanVelocity();camera.movement.resetRotationVelocity();camera.cameraDirection.setAll(0);camera.cameraRotation.set(0,0);camera.position.copyFrom(views.entrance.pos);camera.setTarget(views.entrance.target);touring=true;tourStartedAt=performance.now();travel=null;$('#tour').innerHTML='Ⅱ <span>Pause tour</span>';};
  $('#fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen()}catch(e){console.warn('Fullscreen unavailable',e)}};
- let audio=null;$('#sound').onclick=async()=>{if(!audio){const ac=new(window.AudioContext||window.webkitAudioContext)(),gain=ac.createGain();gain.gain.value=.018;gain.connect(ac.destination);[65.41,98,130.81,196.0].forEach((f,i)=>{const o=ac.createOscillator();o.type='sine';o.frequency.value=f;o.detune.value=i*3;o.connect(gain);o.start()});audio=ac;await ac.resume()}else if(audio.state==='running')await audio.suspend();else await audio.resume();const on=audio.state==='running';$('#sound').innerHTML=`♫ <span>SOUND ${on?'ON':'OFF'}</span>`;$('#sound').setAttribute('aria-label',`${on?'Disable':'Enable'} ambient sound`)};
+ // Native media playback streams the track without downloading/decoding it up front.
+ const audio=new Audio();audio.preload='none';audio.loop=true;
+ const syncSound=()=>{const on=!audio.paused&&!audio.error;$('#sound').innerHTML=`♫ <span>SOUND ${on?'ON':'OFF'}</span>`;$('#sound').setAttribute('aria-label',`${on?'Disable':'Enable'} ambient sound`);$('#sound').setAttribute('aria-pressed',String(on))};
+ ['play','pause','error'].forEach(event=>audio.addEventListener(event,syncSound));
+ $('#sound').onclick=async()=>{
+  if(!audio.paused){audio.pause();return}
+  if(!audio.getAttribute('src'))audio.src=`${import.meta.env.BASE_URL}assets/intro.mp3`;
+  try{await audio.play()}catch(error){if(error.name!=='AbortError')console.warn('Sound playback unavailable',error);syncSound()}
+ };
+ syncSound();scene.onDisposeObservable.add(()=>{audio.pause();audio.removeAttribute('src');audio.load()});
  const atmosphere=createAtmosphere(scene,lanterns);
+ await loadingPhase('loading materials',.62);
  const visuals=createVisualSystem({scene,engine,camera,pipeline,mirror,surfaces,windowGlass,atmosphere,hubPortal,columnLightCluster});
  const lightingDebug=createLightingDebug({scene,camera,canvas,rendererInfo,ambient:hemi,fill,columnLights,columnLightCluster,columnLightColors,lanterns,frames,windowGlass,pipeline,imageProcessing,visuals,Color3:B.Color3});
  visuals.setProfile=qualityProfile=>lightingDebug.setSettings({qualityProfile});
  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
- scene.onBeforeRenderObservable.add(()=>{let dt=Math.min(engine.getDeltaTime(),50);if(!reduced){lanterns.update(dt);crystal.rotation.y+=dt*.00025;wire.rotation.y-=dt*.00013;crystal.position.y=7+Math.sin(performance.now()*.0007)*.2}
+ scene.onBeforeRenderObservable.add(()=>{let dt=Math.min(engine.getDeltaTime(),50);if(!reduced){lanterns.update(dt);crystal.rotation.y+=dt*.00025;wire.rotation.y-=dt*.00013;crystal.position.y=crystalHeight+Math.sin(performance.now()*.0007)*.2}
   if(travel){travel.time+=dt;let t=Math.min(1,travel.time/travel.duration);t=t*t*(3-2*t);camera.position=B.Vector3.Lerp(travel.from,travel.to,t);camera.rotation=B.Vector3.Lerp(travel.r0,travel.r1,t);if(t>=1)travel=null}
   if(touring){
    const t=Math.min((performance.now()-tourStartedAt)/tourDuration,1);
@@ -191,12 +260,18 @@ async function start(){
    camera.position=B.Vector3.Lerp(views.entrance.pos,views.portal.pos,pathT);
    camera.position.x+=Math.sin(t*Math.PI*4)*Math.sin(t*Math.PI)*1.4;
    let target=B.Vector3.Lerp(views.entrance.target,views.portal.target,pathT);
-   // Ease toward alternating exhibits, briefly hold the gaze, then face forward.
+   // Blend unit directions so a nearby exhibit does not cause a sudden turn
+   // at the end of a world-space target interpolation.
    for(const highlight of tourHighlights){
     const distance=Math.abs(t-highlight.at);
     const blend=B.Scalar.Clamp((distance-.025)/.07,0,1);
     const weight=1-blend*blend*(3-2*blend);
-    if(weight>0){const exhibit=frames[highlight.article].parent;target=B.Vector3.Lerp(target,v(exhibit.position.x,4.35,exhibit.position.z),weight)}
+    if(weight>0){
+     const exhibit=frames[highlight.article].parent;
+     const forward=target.subtract(camera.position).normalize();
+     const artwork=v(exhibit.position.x,4.35,exhibit.position.z).subtract(camera.position).normalize();
+     target=camera.position.add(B.Vector3.Lerp(forward,artwork,weight).normalize().scale(10));
+    }
    }
    camera.setTarget(target);if(t>=1)stopTour();
   }
@@ -214,14 +289,19 @@ async function start(){
  });
  // Keep the HTML loader up until all surface maps and scene resources are
  // ready, then let a complete rendered frame reach the canvas before revealing UI.
- Promise.all([visuals.ready,scene.whenReadyAsync()]).then(()=>{
-  scene.onAfterRenderObservable.addOnce(()=>requestAnimationFrame(()=>{
+ visuals.ready.then(async()=>{
+  await loadingPhase('compiling pipelines',.78);
+  await scene.whenReadyAsync();
+  await loadingPhase('warming render targets',.92);
+  scene.onAfterRenderObservable.addOnce(()=>{
+   finishLoading().then(()=>{
    document.documentElement.dataset.appState='ready';
    $('#loading').classList.add('done');$('#loading').setAttribute('aria-hidden','true');
    // Camera keyboard events are delivered only to the focused input canvas.
    // Preserve focus if the visitor has already started interacting with a control.
    if(document.activeElement===document.body)resumeNavigation();
-  }));
+   }).catch(startupError);
+  });
  }).catch(startupError);
  engine.runRenderLoop(()=>scene.render());window.addEventListener('resize',()=>engine.resize());
  // Exposed read-only diagnostics and inspection helpers for browser QA.

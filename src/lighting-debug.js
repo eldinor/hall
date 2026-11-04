@@ -3,7 +3,7 @@ import {rendererStorageKey} from './renderer.js';
 export function createLightingDebug({scene,camera,canvas,rendererInfo,ambient,fill,columnLights,columnLightCluster,columnLightColors,lanterns,frames,windowGlass,pipeline,imageProcessing,visuals,Color3}){
  const storageKey='exalted-lighting-v1';
  const defaultProfile=window.matchMedia('(pointer: coarse)').matches||innerWidth<=850?'performance':'cinematic';
- const defaults={schemaVersion:2,qualityProfile:defaultProfile,aoEnabled:true,aoStrength:.55,aoRadius:.35,fogDensity:.006,dustEnabled:true,ambient:.35,ambientColor:'#b3abdc',fill:.15,fillColor:'#9180db',columns:1.3,columnRange:14,columnColor:'#ffffff',columnPalette:'blue-v1',globeGlow:2,artGlow:.7,glassProfile:'blocks-v1',glassOpacity:.22,glassRoughness:.045,glassRefraction:1,glassIOR:1.52,glassThickness:.24,glassReflection:.55,skyBrightness:.7,skyRotation:110,exposure:1.2,contrast:1.1,bloom:true,bloomWeight:.22,bloomThreshold:.85,bloomKernel:64,vignette:true};
+ const defaults={schemaVersion:2,qualityProfile:defaultProfile,aoEnabled:true,aoStrength:.55,aoRadius:.35,fogDensity:.006,dustEnabled:true,ambient:.35,ambientColor:'#b3abdc',fill:.15,fillColor:'#9180db',columns:1.3,columnRange:14,columnColor:'#ffffff',columnPalette:'blue-v1',globeGlow:2,artGlow:.9,artGlowVersion:1,glassProfile:'blocks-v1',glassOpacity:.22,glassRoughness:.045,glassRefraction:1,glassIOR:1.52,glassThickness:.24,glassReflection:.55,skyBrightness:.7,skyRotation:110,exposure:1.2,contrast:1.1,bloom:true,bloomWeight:.22,bloomThreshold:.85,bloomKernel:64,vignette:true};
  const sections=[
   ['Rendering',[['qualityProfile','Quality','select',[['cinematic','Cinematic'],['performance','Performance']]],['aoEnabled','Ambient occlusion','checkbox'],['aoStrength','AO strength',0,1.5,.05],['aoRadius','AO radius (m)',.05,1,.05]]],
   ['Ambient light',[['ambient','Main ambient',0,2,.05],['ambientColor','Main color','color'],['fill','Blue fill',0,2,.05],['fillColor','Fill color','color']]],
@@ -19,13 +19,14 @@ export function createLightingDebug({scene,camera,canvas,rendererInfo,ambient,fi
  let settings={...defaults};
  try{const saved=JSON.parse(localStorage.getItem(storageKey)||'null');if(saved&&typeof saved==='object'){
   for(const [key,,type,max] of definitions){const value=saved[key];if(type==='select'&&max.some(([id])=>id===value))settings[key]=value;else if(type==='color'&&typeof value==='string'&&/^#[\da-f]{6}$/i.test(value))settings[key]=value;else if(type==='checkbox'&&typeof value==='boolean')settings[key]=value;else if(typeof type==='number'&&typeof value==='number'&&Number.isFinite(value))settings[key]=Math.max(type,Math.min(max,value))}
+  if(saved.artGlowVersion!==defaults.artGlowVersion)settings.artGlow=defaults.artGlow;
   // Upgrade the former glass defaults, preserving any custom lighting values.
   if(!('glassOpacity' in saved)){if(saved.glassRoughness===.08)settings.glassRoughness=defaults.glassRoughness;if(saved.glassReflection===.65)settings.glassReflection=defaults.glassReflection}
   if(saved.columnPalette!==defaults.columnPalette)settings.columnColor=defaults.columnColor;
   if(saved.glassProfile!==defaults.glassProfile)for(const key of ['glassOpacity','glassRoughness','glassThickness','glassReflection'])settings[key]=defaults[key];
   if(saved.schemaVersion!==2){if(saved.ambient===.7)settings.ambient=defaults.ambient;if(saved.fill===.4)settings.fill=defaults.fill}
  }}catch{}
- const panel=document.createElement('details');panel.id='light-debug';panel.className='light-debug';panel.open=true;
+ const panel=document.createElement('details');panel.id='light-debug';panel.className='light-debug';panel.open=false;
  panel.innerHTML='<summary>Light Debug</summary><div class="light-debug-body"><p class="light-debug-status"></p><form aria-label="Lighting controls"></form><div class="light-debug-actions"><button type="button" id="lighting-reset">Reset</button><button type="button" id="lighting-copy">Copy settings</button></div><p class="light-debug-feedback" role="status" aria-live="polite">Changes are saved in this browser.</p></div>';
  panel.querySelector('.light-debug-status').textContent=columnLightCluster?'14 column lights · Clustered':'GPU fallback · 2 nearest column lights';
  const form=panel.querySelector('form');
@@ -41,7 +42,7 @@ export function createLightingDebug({scene,camera,canvas,rendererInfo,ambient,fi
   form.append(fieldset);
  }
  form.addEventListener('submit',event=>event.preventDefault());
- document.body.append(panel);
+ document.querySelector('.header-right').append(panel);
  const rendererRow=document.createElement('label');rendererRow.className='light-debug-control';
  const rendererLabel=document.createElement('span');rendererLabel.textContent='Renderer';
  const rendererSelect=document.createElement('select');rendererSelect.id='renderer-preference';rendererSelect.name='rendererPreference';
@@ -63,7 +64,10 @@ export function createLightingDebug({scene,camera,canvas,rendererInfo,ambient,fi
   for(const [index,light] of columnLights.entries()){const shade=shades[index%shades.length];light.intensity=settings.columns;light.range=settings.columnRange;light.diffuse=shade.clone();light.specular=shade.scale(.3)}
   if(columnLightCluster)columnLightCluster.maxRange=settings.columnRange;
   lanterns.setGlow(shades,settings.globeGlow);
-  for(const frame of frames)frame.material.emissiveColor=new Color3(settings.artGlow,settings.artGlow,settings.artGlow);
+  for(const frame of frames){
+   if(frame.material.metadata?.textureOnlyGlow){frame.material.emissiveColor=Color3.Black();frame.material.emissiveTexture.level=settings.artGlow}
+   else frame.material.emissiveColor=new Color3(settings.artGlow,settings.artGlow,settings.artGlow);
+  }
   for(const material of windowGlass.materials){material.alpha=settings.glassOpacity;material.roughness=settings.glassRoughness;material.environmentIntensity=settings.glassReflection;material.subSurface.refractionIntensity=settings.glassRefraction;material.subSurface.indexOfRefraction=settings.glassIOR;material.subSurface.minimumThickness=settings.glassThickness;material.subSurface.maximumThickness=settings.glassThickness}
   windowGlass.skyTexture.level=settings.skyBrightness;
   windowGlass.reflection.rotationY=windowGlass.skyTexture.rotationY=settings.skyRotation*Math.PI/180;
@@ -84,7 +88,7 @@ export function createLightingDebug({scene,camera,canvas,rendererInfo,ambient,fi
  const resumeCamera=()=>{if(!panel.contains(document.activeElement)&&!document.querySelector('dialog[open]'))camera.attachControl(canvas,true)};
  panel.addEventListener('focusin',()=>camera.detachControl());panel.addEventListener('focusout',()=>queueMicrotask(resumeCamera));
  panel.addEventListener('keydown',event=>event.stopPropagation());
- sync();apply();
+ sync();apply();save();
  const metricsTimer=setInterval(()=>{const m=visuals.getMetrics();panel.querySelector('.light-debug-status').textContent=`${columnLightCluster?'14 blue clustered lights':'2 nearest lights'} · ${visuals.getProfile()||''}${m.fps?' · '+m.fps+' FPS':''}${m.gpuFrameMs?' · GPU '+m.gpuFrameMs.toFixed(1)+' ms':''}`},1000);
  scene.onDisposeObservable.add(()=>clearInterval(metricsTimer));
  return {panel,getSettings:()=>({...settings}),reset:()=>panel.querySelector('#lighting-reset').click(),setSettings:patch=>{for(const [key,,type,max]of definitions){if(!(key in patch))continue;const value=patch[key];if(type==='select'&&max.some(([id])=>id===value)||type==='checkbox'&&typeof value==='boolean'||type==='color'&&/^#[\da-f]{6}$/i.test(value))settings[key]=value;else if(typeof type==='number'&&Number.isFinite(value))settings[key]=Math.max(type,Math.min(max,value))}apply();sync();save();return visuals.ready}};

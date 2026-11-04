@@ -6,7 +6,7 @@ import vertexGLSL from './shaders/entrance-portal/portal.vertex.glsl?raw';
 import ringGLSL from './shaders/entrance-portal/ring.fragment.glsl?raw';
 import surfaceGLSL from './shaders/entrance-portal/surface.fragment.glsl?raw';
 
-export const entrancePortalDestination='https://test5.babylonpress.org/';
+export const entrancePortalDestination='https://test6.babylonpress.org/';
 const portalScale=3;
 const apertureRadius=1.18*portalScale;
 const interactionDistance=4.5;

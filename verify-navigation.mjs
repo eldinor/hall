@@ -70,6 +70,7 @@ try{
   await page.waitForFunction(()=>document.activeElement.id==='scene'&&hall.camera.inputs.attachedToElement);await move('w','z',1);
   await page.evaluate(()=>hall.openArticle(0));await page.locator('#close').click();
   await page.waitForFunction(()=>document.activeElement.id==='scene'&&hall.camera.inputs.attachedToElement);await move('d','x',1);
+  await page.locator('#light-debug > summary').click();
   await page.locator('#lighting-ambient').focus();
   assert.equal(await page.evaluate(()=>hall.camera.inputs.attachedToElement),false);
   await page.keyboard.down('ShiftLeft');assert.equal(await page.evaluate(()=>hall.camera.speed),walkingSpeed);await page.keyboard.up('ShiftLeft');

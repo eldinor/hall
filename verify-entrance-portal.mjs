@@ -15,7 +15,7 @@ try{
   await page.goto(url);await page.waitForFunction(()=>window.hall&&document.documentElement.dataset.appState==='ready',null,{timeout:120000});
   assert.equal(await page.evaluate(()=>hall.rendererInfo.activeBackend),backend);
   const initial=await page.evaluate(()=>({portal:hall.entrancePortal.getState(),spawn:hall.camera.position.asArray(),meshes:hall.scene.meshes.filter(m=>m.metadata?.entrancePortal).map(m=>({name:m.name,pickable:m.isPickable,ready:m.material.isReady(m)}))}));
-  assert.equal(initial.portal.entered,false);assert.equal(initial.portal.destination,'https://test5.babylonpress.org/');
+  assert.equal(initial.portal.entered,false);assert.equal(initial.portal.destination,'https://test6.babylonpress.org/');
   assert.ok(initial.portal.position[2]<initial.spawn[2]);assert.ok(initial.portal.position[2]>-23);
   assert.equal(initial.meshes.length,2);assert.ok(initial.meshes.every(m=>m.ready&&!m.pickable));
   // The walking body must stop at the wall, including elevated camera presets.
@@ -37,7 +37,7 @@ try{
   const prompt=page.locator('#entrance-portal-prompt');
   assert.equal(await prompt.isVisible(),false);
   let redirects=0;
-  await page.route('https://test5.babylonpress.org/**',async route=>{redirects++;await route.fulfill({contentType:'text/html',body:'<h1>Sandbox destination intercepted by gallery QA</h1>'})});
+  await page.route('https://test6.babylonpress.org/**',async route=>{redirects++;await route.fulfill({contentType:'text/html',body:'<h1>Sandbox destination intercepted by gallery QA</h1>'})});
   await page.evaluate(()=>{hall.camera.position.set(0,4.6,-18.2);hall.camera.setTarget(hall.entrancePortal.root.position);hall.camera.movement.resetPanVelocity()});
   await prompt.waitFor({state:'visible'});assert.equal(await prompt.textContent(),'Press E to return to Sandbox');
   await page.evaluate(()=>hall.camera.rotation.set(0,0,0));await prompt.waitFor({state:'hidden'});
@@ -57,7 +57,7 @@ try{
   assert.equal(redirects,0);assert.equal(await page.evaluate(()=>hall.entrancePortal.getState().entered),false);
   // Turning back toward the portal from its other side still permits E.
   await page.evaluate(()=>{hall.camera.movement.resetPanVelocity();hall.camera.setTarget(hall.entrancePortal.root.position)});await prompt.waitFor({state:'visible'});
-  await page.keyboard.press('e');await page.waitForURL('https://test5.babylonpress.org/',{timeout:15000});
+  await page.keyboard.press('e');await page.waitForURL('https://test6.babylonpress.org/',{timeout:15000});
   assert.equal(redirects,1);assert.deepEqual(errors,[]);
   report.push({backend,position:initial.portal.position,shadersReady:true,reducedMotion:true,nearAndFacingPrompt:true,hiddenWhenAwayOrBusy:true,walkThroughWithoutNavigation:true,pressERedirect:true,errors});
   await page.close();

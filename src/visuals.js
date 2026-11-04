@@ -40,6 +40,14 @@ export function createVisualSystem({scene,engine,camera,pipeline,mirror,surfaces
    if(geometry){
     geometry.getGBuffer().renderParticles=false;
     geometry.renderList=scene.meshes.filter(m=>!windowGlass.materials.includes(m.material)&&!m.metadata?.skybox&&!m.metadata?.lanternGlass&&!m.metadata?.lanternHalo&&!m.metadata?.entrancePortal&&!m.metadata?.hubPortal&&!m.metadata?.rearGroundFog);
+    // Geometry-buffer depth defaults to zero in empty sky pixels. SSAO treats
+    // those as foreground, blacking out windows and the portal at high strength.
+    // Clear only linear depth to far distance; leave the other attachments alone.
+    const gBuffer=geometry.getGBuffer(),depthIndex=geometry.getTextureIndex(B.GeometryBufferRenderer.DEPTH_TEXTURE_TYPE);
+    const depthLayout=engine.buildTextureLayout(Array.from({length:gBuffer.count},(_,index)=>index===depthIndex));
+    const allLayout=engine.buildTextureLayout(Array.from({length:gBuffer.count},()=>true));
+    const farDepth=new B.Color4(camera.maxZ,0,0,1);
+    gBuffer.onClearObservable.add(()=>{farDepth.r=camera.maxZ;engine.clearAttachments(farDepth,depthLayout,true,false,false);engine.bindAttachments(allLayout)});
     ao=new B.SSAO2RenderingPipeline('EXALTED contact occlusion',scene,{ssaoRatio:.5,blurRatio:.5},[camera],geometry);
     ao.samples=16;ao.radius=.35;ao.totalStrength=.55;ao.base=.15;ao.maxZ=100;ao.textureSamples=samples;ao.bilateralSamples=8;
    }else aoActive=false;

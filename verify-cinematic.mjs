@@ -53,11 +53,11 @@ try{
   const roof=hall.scene.meshes.find(m=>m.name.startsWith('Continuous vaulted ceiling'));assert(roof,'Roof not found');roof.computeWorldMatrix(true);
   for(const side of [-1,1])for(const z of [8,18]){const start=new V(0,7,10),target=new V(side*12.35,14.05,z),ray=new Ray(start,target.subtract(start).normalize(),50);assert(!ray.intersectsMesh(roof).hit,'Roof obstructs upper window blocks')}
   const realNow=performance.now.bind(performance);let time=realNow();performance.now=()=>time;document.querySelector('#tour').click();const start=time;
-  for(const [ms,index]of [[6000,0],[12000,5],[18000,2],[24000,7]]){time=start+ms;hall.scene.onBeforeRenderObservable.notifyObservers(hall.scene);const p=hall.frames[index].parent.position.clone();p.y=4.35;const wanted=p.subtract(hall.camera.position).normalize(),actual=hall.camera.getForwardRay().direction;assert(wanted.x*actual.x+wanted.y*actual.y+wanted.z*actual.z>.999,'Tour missed article')}
+  for(const [ms,index]of [[6000,0],[12000,3],[18000,4],[24000,7]]){time=start+ms;hall.scene.onBeforeRenderObservable.notifyObservers(hall.scene);const p=hall.frames[index].parent.position.clone();p.y=4.35;const wanted=p.subtract(hall.camera.position).normalize(),actual=hall.camera.getForwardRay().direction;assert(wanted.x*actual.x+wanted.y*actual.y+wanted.z*actual.z>.999,'Tour missed article')}
   time=start+30000;hall.scene.onBeforeRenderObservable.notifyObservers(hall.scene);assert(!document.querySelector('#tour').textContent.includes('Pause'),'Tour exceeded 30 seconds');performance.now=realNow;
   return {allArticles:true,billboards:true,upperWindowsClear:true,tour30Seconds:true};
  }));
- await page.locator('#lighting-reset').click();if(!await page.evaluate(()=>hall.lightingDebug.getSettings().ambient===.35&&hall.lightingDebug.getSettings().fill===.15))throw Error('Reset defaults wrong');
+ await page.locator('#light-debug > summary').click();await page.locator('#lighting-reset').click();if(!await page.evaluate(()=>hall.lightingDebug.getSettings().ambient===.35&&hall.lightingDebug.getSettings().fill===.15))throw Error('Reset defaults wrong');
  console.log('Checking mobile placeholder');
  const mobile=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});mobile.on('pageerror',e=>errors.push(e.message));await mobile.goto(url);await mobile.waitForFunction(()=>document.documentElement.dataset.appState==='mobile');
  report.checks.push(await mobile.evaluate(()=>{if(window.hall||document.documentElement.scrollWidth>innerWidth||document.querySelector('#mobile-placeholder').hidden)throw Error('Mobile placeholder/layout failure');return {mobilePlaceholder:true,noOverflow:true}}));

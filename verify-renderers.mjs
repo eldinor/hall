@@ -36,7 +36,7 @@ async function exercise(page,backend){
  assert.equal(await page.evaluate(()=>hall.visuals.getState().aoActive||hall.atmosphere.getState().enabled),false);
  await page.evaluate(()=>hall.lightingDebug.setSettings({aoEnabled:true,dustEnabled:true}));
  await page.evaluate(()=>hall.openArticle(0));await page.locator('#next').click();
- assert.equal(await page.locator('#article-title').textContent(),'The Verdant Archive');await page.locator('#close').click();
+ assert.equal(await page.locator('#article-title').textContent(),"Worlds 2026 and the Demon King’s Unfinished Story");await page.locator('#close').click();
  await page.locator('[data-view="nave"]').click();await page.waitForTimeout(2400);
  await page.setViewportSize({width:1000,height:760});
  await page.waitForTimeout(300);
@@ -68,13 +68,13 @@ try{
  assert.match(await fallback.evaluate(()=>hall.rendererInfo.fallbackReason),/unavailable/);
  assert.equal(await fallback.evaluate(()=>hall.rendererInfo.preference),'auto');
  // Selection changes reload and persist without altering lighting preferences.
- await fallback.locator('#renderer-preference').selectOption('webgl');await fallback.waitForLoadState('load');await ready(fallback);
+ await fallback.locator('#light-debug > summary').click();await fallback.locator('#renderer-preference').selectOption('webgl');await fallback.waitForLoadState('load');await ready(fallback);
  assert.equal(await fallback.evaluate(()=>hall.rendererInfo.preference),'webgl');
  assert.equal(await fallback.evaluate(()=>window.adapterRequests),0);
  assert.equal(await fallback.evaluate(()=>hall.lightingDebug.getSettings().qualityProfile),'cinematic');
  assert.equal(await fallback.evaluate(()=>hall.rendererInfo.fallbackReason),null);
  await fallback.reload();await ready(fallback);assert.equal(await fallback.locator('#renderer-preference').inputValue(),'webgl');
- await fallback.locator('#renderer-preference').selectOption('auto');await fallback.waitForLoadState('load');await ready(fallback);
+ await fallback.locator('#light-debug > summary').click();await fallback.locator('#renderer-preference').selectOption('auto');await fallback.waitForLoadState('load');await ready(fallback);
  assert.equal(await fallback.evaluate(()=>hall.rendererInfo.preference),'auto');
  await fallback.setViewportSize({width:850,height:800});await fallback.waitForFunction(()=>document.documentElement.dataset.appState==='mobile'&&!window.hall);
  await fallback.setViewportSize({width:851,height:800});await ready(fallback);
@@ -98,7 +98,7 @@ try{
  const noStorage=await fresh();
  await noStorage.addInitScript(()=>{Object.defineProperty(navigator,'gpu',{value:undefined});Storage.prototype.getItem=()=>{throw new Error('Storage blocked')};Storage.prototype.setItem=()=>{throw new Error('Storage blocked')}});
  await noStorage.goto(url);await ready(noStorage);assert.equal(await noStorage.evaluate(()=>hall.rendererInfo.preference),'auto');
- await noStorage.locator('#renderer-preference').selectOption('webgl');assert.match(await noStorage.locator('.light-debug-feedback').textContent(),/requires browser storage/);
+ await noStorage.locator('#light-debug > summary').click();await noStorage.locator('#renderer-preference').selectOption('webgl');assert.match(await noStorage.locator('.light-debug-feedback').textContent(),/requires browser storage/);
  report.checks.push({storageUnavailable:true});await noStorage.close();
 
  const webgpu=await fresh();
