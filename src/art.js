@@ -3,21 +3,24 @@ import wowForever from './content/wow-forever.json';
 import fakerWorlds from './content/faker-worlds-2026.json';
 import runescape from './content/runescape-gold-rush.json';
 import halloween from './content/halloween-gamers-dilemma.json';
+import minecraftCoach from './content/minecraft-coach-tomlin.json';
+import militaryGaming from './content/military-gaming.json';
+import gamersGolf from './content/gamers-n-golf.json';
 
 const exhibitContent = [
   [gtaVi.title,'GAMES · 01',gtaVi.paragraphs[0],'#d6a36f','#494070'],
   [fakerWorlds.title,'ESPORTS · 02',fakerWorlds.paragraphs[0],'#b9d7b0','#164743'],
   [halloween.title,'LIFE · 03',halloween.paragraphs[0],'#d3a9ed','#31275a'],
-  ['The Last Citadel','LEGENDS · 04','At the edge of winter stands a citadel that has never fallen. Its story is one of resilience: a solitary light held against an endless blue horizon.','#c3d6ed','#344c73'],
+  [militaryGaming.title,'GAMES · 04',militaryGaming.paragraphs[0],'#c3d6ed','#344c73'],
   [wowForever.title,'GAMES · 05',wowForever.paragraphs[0],'#b6b5fb','#42418a'],
   [runescape.title,'GAMES · 06',runescape.preview,'#f3be8c','#8a4152'],
-  ['The Silent Observatory','REFLECTIONS · 07','High above the cloud line, an observatory listens to the sky. Its keepers have learned that the greatest discoveries often begin with a moment of stillness.','#9ddcdb','#234855'],
-  ['A World Beyond','IMAGINATION · 08','The final frame is an invitation. Beyond this mountain range lies an unwritten world, waiting for the next traveller to give it a story.','#dcb3ed','#5b3675']
+  [minecraftCoach.title,'GAMES · 07',minecraftCoach.paragraphs[0],'#9ddcdb','#234855'],
+  [gamersGolf.title,'GAMES · 08',gamersGolf.paragraphs[0],'#dcb3ed','#5b3675']
 ].map(([title,category,description,light,dark],i)=>{
- const content=i===0?gtaVi:i===1?fakerWorlds:i===2?halloween:i===4?wowForever:i===5?runescape:null;
+ const content=i===0?gtaVi:i===1?fakerWorlds:i===2?halloween:i===3?militaryGaming:i===4?wowForever:i===5?runescape:i===6?minecraftCoach:i===7?gamersGolf:null;
  return {title,category,description,light,dark,index:i,
-  cover:i===0?'covers/Official_Cover_Art_portrait.webp':i===1?'covers/Faker_portrait_in_Worlds_26_artwork.webp':i===4?'covers/Dramatic_god_rays_across_the_Warcraft_poster.webp':i===5?'covers/RuneScape-Gold-Rush-Edited1.webp':i===2?'covers/halloween_comic_whatever_fixed.webp':null,
-  coverAspect:i===0?1080/1920:i===1?1024/1536:i===2?706/1024:i===4?706/1412:i===5?1024/1536:null,
+  cover:i===0?'covers/Official_Cover_Art_portrait.webp':i===1?'covers/Faker_portrait_in_Worlds_26_artwork.webp':i===4?'covers/Dramatic_god_rays_across_the_Warcraft_poster.webp':i===5?'covers/RuneScape-Gold-Rush-Edited1.webp':i===2?'covers/halloween_comic_whatever_fixed.webp':i===6?'covers/Minecraft_Coach_Tomlin.webp':i===3?'covers/Military_branches_and_iconic_gaming_logos.webp':i===7?'covers/Golfers_and_operators_above_the_city.webp':null,
+  coverAspect:i===0?1080/1920:i===1?1024/1536:i===2?706/1024:i===3?1024/1536:i===4?706/1412:i===5?1024/1536:i===6?1024/1536:i===7?1024/1536:null,
   paragraphs:content?.paragraphs??null,formattedParagraphs:content?.formattedParagraphs??null,
   subtitle:content?.subtitle??'',byline:content?.byline??'',preview:content?.preview??''};
 });

@@ -152,7 +152,15 @@ async function start(){
  const crystalHeight=7;
  const crystal=B.MeshBuilder.CreatePolyhedron('Floating astral crystal',{type:1,size:1.15},scene);crystal.position=v(0,crystalHeight,52);crystal.scaling.setAll(.55);crystal.material=purple;
  const wire=B.MeshBuilder.CreatePolyhedron('Astral brass cage',{type:1,size:1.6},scene);wire.position=crystal.position.clone();wire.scaling.setAll(.55);const wm=mat('Wire brass','#eac58c',1);wm.wireframe=true;wire.material=wm;
- const signTex=new B.DynamicTexture('Sanctuary inscription',{width:1024,height:256},scene,false),sg=signTex.getContext();sg.clearRect(0,0,1024,256);sg.textAlign='center';sg.fillStyle='#e6c692';sg.font='600 72px "Segoe UI", Arial, sans-serif';sg.fillText('EXALTED',512,110);sg.font='29px "Segoe UI", Arial, sans-serif';sg.fillText('Interactive 3D magazine',512,172);signTex.hasAlpha=true;signTex.update();const sm=mat('Gold inscription','#ffffff',.8);sm.diffuseTexture=signTex;sm.emissiveTexture=signTex;sm.useAlphaFromDiffuseTexture=true;const sign=B.MeshBuilder.CreatePlane('Hall inscription',{width:8,height:2},scene);sign.position=v(0,1.6,49);sign.material=sm;
+ const signTex=new B.DynamicTexture('Sanctuary inscription',{width:1024,height:256},scene,false),sg=signTex.getContext();sg.clearRect(0,0,1024,256);sg.textAlign='center';sg.fillStyle='#e6c692';sg.font='600 72px "Segoe UI", Arial, sans-serif';sg.fillText('EXALTED',512,110);sg.fillStyle='#929bff';sg.font='29px "Segoe UI", Arial, sans-serif';sg.fillText('Interactive 3D magazine',512,172);signTex.hasAlpha=true;signTex.update();const sm=mat('Gold inscription','#ffffff',.8);sm.diffuseTexture=signTex;sm.emissiveTexture=signTex;sm.useAlphaFromDiffuseTexture=true;const sign=B.MeshBuilder.CreatePlane('Hall inscription',{width:8,height:2},scene);sign.position=v(0,1.6,49);sign.material=sm;
+ const crownTexture=new B.Texture(`${import.meta.env.BASE_URL}assets/branding/exalted-crown.png`,scene);crownTexture.hasAlpha=true;
+ const crownMat=mat('EXALTED logo crown','#ffffff');crownMat.disableLighting=true;crownMat.fogEnabled=false;crownMat.diffuseTexture=crownTexture;crownMat.emissiveTexture=crownTexture;crownMat.useAlphaFromDiffuseTexture=true;
+ const crown=B.MeshBuilder.CreatePlane('EXALTED crown',{width:1.15,height:1.15*190/255},scene);crown.position=v(0,2.9,49);crown.material=crownMat;crown.isPickable=false;crown.metadata={exaltedCrown:true};
+ // Give the purple artwork its own soft halo instead of overexposing its fill.
+ // The halo texture cuts out the crown's interior, keeping its fill saturated.
+ const crownHaloTexture=new B.Texture(`${import.meta.env.BASE_URL}assets/branding/exalted-crown-halo.png`,scene);crownHaloTexture.hasAlpha=true;crownHaloTexture.level=3;
+ const crownHaloMat=mat('Crown purple halo','#ffffff');crownHaloMat.disableLighting=true;crownHaloMat.fogEnabled=false;crownHaloMat.diffuseTexture=crownHaloTexture;crownHaloMat.emissiveTexture=crownHaloTexture;crownHaloMat.useAlphaFromDiffuseTexture=true;crownHaloMat.alphaMode=B.Constants.ALPHA_ADD;crownHaloMat.disableDepthWrite=true;
+ const crownHalo=B.MeshBuilder.CreatePlane('EXALTED crown halo',{width:1.15*335/255,height:1.15*270/255},scene);crownHalo.position=v(0,2.9,49.01);crownHalo.material=crownHaloMat;crownHalo.isPickable=false;crownHalo.metadata={exaltedCrownHalo:true};
  // Exhibit children must retain their parent so pedestals and frames billboard together.
  for(const mesh of scene.meshes)projectArchitecturalUVs(mesh);
  const groups=new Map();for(const m of [...scene.meshes]){if([floor,crystal,wire,sign].includes(m)||m.metadata||m.parent)continue;m.computeWorldMatrix(true);if(!groups.has(m.material))groups.set(m.material,[]);groups.get(m.material).push(m)}
@@ -234,6 +242,12 @@ async function start(){
  $('#artwork-viewer').addEventListener('click',event=>{if(event.target===$('#artwork-viewer'))$('#artwork-viewer').close()});
  $('#close').onclick=()=>$('#article').close();$('#article').addEventListener('close',resumeNavigation);$('#previous').onclick=()=>openArticle(selected-1);$('#next').onclick=()=>openArticle(selected+1);
  $('#help').onclick=()=>{$('#controls').showModal();camera.detachControl()};$('#close-help').onclick=$('#got-it').onclick=()=>$('#controls').close();$('#controls').addEventListener('close',resumeNavigation);
+ for(const dialog of [$('#article'),$('#controls')]){
+  let pressedOutside=false;
+  const outside=event=>{const rect=dialog.getBoundingClientRect();return event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom};
+  dialog.addEventListener('pointerdown',event=>{pressedOutside=event.button===0&&event.target===dialog&&outside(event)});
+  dialog.addEventListener('click',event=>{if(pressedOutside&&event.target===dialog&&outside(event))dialog.close();pressedOutside=false});
+ }
  $('#tour').onclick=()=>{if(touring){stopTour();return}keyboardNavigation.clear();camera.movement.resetPanVelocity();camera.movement.resetRotationVelocity();camera.cameraDirection.setAll(0);camera.cameraRotation.set(0,0);camera.position.copyFrom(views.entrance.pos);camera.setTarget(views.entrance.target);touring=true;tourStartedAt=performance.now();travel=null;$('#tour').innerHTML='Ⅱ <span>Pause tour</span>';};
  $('#fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen()}catch(e){console.warn('Fullscreen unavailable',e)}};
  // Native media playback streams the track without downloading/decoding it up front.

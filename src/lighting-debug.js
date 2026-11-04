@@ -4,7 +4,10 @@ export function createLightingDebug({scene,camera,canvas,rendererInfo,ambient,fi
  const storageKey='exalted-lighting-v1';
  const defaultProfile=window.matchMedia('(pointer: coarse)').matches||innerWidth<=850?'performance':'cinematic';
  const defaults={schemaVersion:2,qualityProfile:defaultProfile,aoEnabled:true,aoStrength:.55,aoRadius:.35,fogDensity:.006,dustEnabled:true,ambient:.35,ambientColor:'#b3abdc',fill:.15,fillColor:'#9180db',columns:1.3,columnRange:14,columnColor:'#ffffff',columnPalette:'blue-v1',globeGlow:2,artGlow:.9,artGlowVersion:1,glassProfile:'blocks-v1',glassOpacity:.22,glassRoughness:.045,glassRefraction:1,glassIOR:1.52,glassThickness:.24,glassReflection:.55,skyBrightness:.7,skyRotation:110,exposure:1.2,contrast:1.1,bloom:true,bloomWeight:.22,bloomThreshold:.85,bloomKernel:64,vignette:true};
+ const defaultMouseSensibility=camera.angularSensibility;
+ defaults.mouseSensitivity=1;
  const sections=[
+  ['Navigation',[['mouseSensitivity','Mouse Sensitivity',.25,3,.05]]],
   ['Rendering',[['qualityProfile','Quality','select',[['cinematic','Cinematic'],['performance','Performance']]],['aoEnabled','Ambient occlusion','checkbox'],['aoStrength','AO strength',0,1.5,.05],['aoRadius','AO radius (m)',.05,1,.05]]],
   ['Ambient light',[['ambient','Main ambient',0,2,.05],['ambientColor','Main color','color'],['fill','Blue fill',0,2,.05],['fillColor','Fill color','color']]],
   ['Column lights',[['columns','Intensity',0,8,.1],['columnRange','Range (m)',2,40,1],['columnColor','Palette tint','color'],['globeGlow','Crystal glow',0,6,.1]]],
@@ -27,11 +30,11 @@ export function createLightingDebug({scene,camera,canvas,rendererInfo,ambient,fi
   if(saved.schemaVersion!==2){if(saved.ambient===.7)settings.ambient=defaults.ambient;if(saved.fill===.4)settings.fill=defaults.fill}
  }}catch{}
  const panel=document.createElement('details');panel.id='light-debug';panel.className='light-debug';panel.open=false;
- panel.innerHTML='<summary>Light Debug</summary><div class="light-debug-body"><p class="light-debug-status"></p><form aria-label="Lighting controls"></form><div class="light-debug-actions"><button type="button" id="lighting-reset">Reset</button><button type="button" id="lighting-copy">Copy settings</button></div><p class="light-debug-feedback" role="status" aria-live="polite">Changes are saved in this browser.</p></div>';
+ panel.innerHTML='<summary>Settings</summary><div class="light-debug-body"><p class="light-debug-status"></p><form aria-label="Gallery settings"></form><div class="light-debug-actions"><button type="button" id="lighting-reset">Reset</button><button type="button" id="lighting-copy">Copy settings</button></div><p class="light-debug-feedback" role="status" aria-live="polite">Changes are saved in this browser.</p></div>';
  panel.querySelector('.light-debug-status').textContent=columnLightCluster?'14 column lights · Clustered':'GPU fallback · 2 nearest column lights';
  const form=panel.querySelector('form');
  for(const [name,fields] of sections){
-  const fieldset=document.createElement('fieldset'),legend=document.createElement('legend');legend.textContent=name;fieldset.append(legend);
+  const fieldset=document.createElement('fieldset'),legend=document.createElement('legend');fieldset.dataset.section=name;legend.textContent=name;fieldset.append(legend);
   for(const [key,label,type,max,step] of fields){
    const row=document.createElement('label');row.className='light-debug-control';row.htmlFor='lighting-'+key;
    const title=document.createElement('span');title.textContent=label;const input=document.createElement(type==='select'?'select':'input');input.id='lighting-'+key;input.name=key;
@@ -47,7 +50,7 @@ export function createLightingDebug({scene,camera,canvas,rendererInfo,ambient,fi
  const rendererLabel=document.createElement('span');rendererLabel.textContent='Renderer';
  const rendererSelect=document.createElement('select');rendererSelect.id='renderer-preference';rendererSelect.name='rendererPreference';
  for(const [value,text] of [['auto','Auto (WebGPU preferred)'],['webgl','WebGL compatibility']]){const option=document.createElement('option');option.value=value;option.textContent=text;rendererSelect.append(option)}
- rendererSelect.value=rendererInfo.preference;rendererRow.append(rendererLabel,rendererSelect);form.querySelector('fieldset').prepend(rendererRow);
+ rendererSelect.value=rendererInfo.preference;rendererRow.append(rendererLabel,rendererSelect);form.querySelector('fieldset[data-section="Rendering"]').prepend(rendererRow);
  rendererSelect.addEventListener('input',event=>{
   event.stopPropagation();
   try{localStorage.setItem(rendererStorageKey,rendererSelect.value);window.location.reload()}
@@ -58,6 +61,9 @@ export function createLightingDebug({scene,camera,canvas,rendererInfo,ambient,fi
  const color=(hex,amount=1)=>Color3.FromHexString(hex).scale(amount);
  const feedback=panel.querySelector('.light-debug-feedback');
  function apply(){
+  // Babylon divides mouse movement by angularSensibility: a larger slider
+  // value therefore needs a smaller divisor to make looking around faster.
+  camera.angularSensibility=defaultMouseSensibility/settings.mouseSensitivity;
   ambient.intensity=settings.ambient;ambient.diffuse=color(settings.ambientColor);
   fill.intensity=settings.fill;fill.diffuse=color(settings.fillColor);
   const shades=columnLightColors.map(shade=>shade.multiply(color(settings.columnColor)));
@@ -81,7 +87,7 @@ export function createLightingDebug({scene,camera,canvas,rendererInfo,ambient,fi
  function sync(){for(const [key] of definitions){const input=form.elements.namedItem(key);if(input.type==='checkbox')input.checked=settings[key];else input.value=settings[key];const output=input.parentElement.querySelector('output');if(output)output.value=Number(settings[key]).toFixed(Number(input.step)<.01?3:Number(input.step)<1?2:0)}for(const key of ['aoEnabled','aoStrength','aoRadius']){const input=form.elements.namedItem(key);input.disabled=settings.qualityProfile==='performance';input.title=input.disabled?'Ambient occlusion is available in Cinematic quality.':'';if(key==='aoEnabled'&&input.disabled)input.checked=false}}
  function save(){try{localStorage.setItem(storageKey,JSON.stringify(settings));feedback.textContent='Saved in this browser.'}catch{feedback.textContent='Applied for this session; browser storage is unavailable.'}}
  form.addEventListener('input',event=>{const input=event.target;if(!(input instanceof HTMLInputElement||input instanceof HTMLSelectElement))return;settings[input.name]=input.type==='checkbox'?input.checked:input.type==='color'||input instanceof HTMLSelectElement?input.value:Number(input.value);apply();sync();save()});
- panel.querySelector('#lighting-reset').onclick=()=>{settings={...defaults};apply();sync();save();feedback.textContent='Default lighting restored.'};
+ panel.querySelector('#lighting-reset').onclick=()=>{settings={...defaults};apply();sync();save();feedback.textContent='Default settings restored.'};
  panel.querySelector('#lighting-copy').onclick=async()=>{try{await navigator.clipboard.writeText(JSON.stringify(settings,null,2));feedback.textContent='Settings copied.'}catch{feedback.textContent='Clipboard unavailable. Settings remain saved in this browser.'}};
  // Focused controls own keyboard input; merely hovering the panel must not
  // disable WASD after a dialog closes or the visitor returns to the canvas.
