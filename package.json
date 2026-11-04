@@ -1,1 +1,27 @@
-{"name":"hall-of-wonders","version":"1.0.0","private":true,"type":"module","scripts":{"dev":"vite --host 127.0.0.1","build":"vite build","preview":"vite preview --host 127.0.0.1"},"dependencies":{"babylonjs":"^8.0.0"},"devDependencies":{"vite":"^6.0.0","playwright":"^1.58.2"}}
+{
+  "name": "hall-of-wonders",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "qa:scenes": "node verify-cinematic.mjs",
+    "qa:particles": "node verify-atmosphere.mjs",
+    "qa:visual": "node qa-visual.mjs",
+    "qa:hardware": "node qa-visual.mjs --hardware",
+    "assets:prepare": "node prepare-materials.mjs",
+    "qa:reflections": "node verify-reflections.mjs",
+    "qa:renderers": "node verify-renderers.mjs",
+    "assets:environment": "node prepare-environment.mjs"
+  },
+  "dependencies": {
+    "babylonjs": "9.33.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.58.2",
+    "sharp": "^0.35.5",
+    "vite": "^6.0.0"
+  }
+}

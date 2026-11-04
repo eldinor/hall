@@ -1,0 +1,187 @@
+{
+    "title":  "GTA VI: Inside Rockstar’s New Open World",
+    "paragraphs":  [
+                       "Grand Theft Auto VI brings modern-day Vice City and the surrounding state of Leonida to life with deeper crime systems, more responsive characters, and new ways to spend your time between missions.",
+                       "At the center are Jason Duval and Lucia Caminos, two playable protagonists who can explore separately or together. Their relationship is something players can influence: spending time together strengthens their connection, while neglecting it can affect how their story unfolds. Romance is optional; their criminal partnership remains central.",
+                       "A new Criminal Profile tracks patterns in your behavior, influencing reactions and narrative details. Encounters offer more choices, including intimidation, fighting, and incapacitating someone. Pedestrians also respond more closely to your presence, potentially noticing when you follow them or overhear their conversations.",
+                       "Police pursuits introduce more detailed identification. Officers can know your clothing, vehicle, and whether you are traveling together. Changing those details helps you escape detection. Gameplay footage also shows switching between protagonists during combat and more precise targeting of opponents’ body parts.",
+                       "Car theft becomes a more involved activity. Certain parked vehicles require tools unlocked through progression, including key cloners and slim jims. A phone scanner reveals alarms, trackers, and resale values, giving players useful information before choosing a target.",
+                       "Everyday life receives attention, too. Gym workouts can increase strength and muscularity, while overeating adds weight. Players can browse the in-game Snapmatic social feed, although Jason and Lucia cannot post. Personal vehicles also hold purchased weapons and spare outfits.",
+                       "Away from robberies and police chases, the gameplay showcase features basketball, kayaking, scuba diving, weightlifting, dirt biking, airboats, and skydiving. Together, these new and returning activities give players plenty to explore outside the main story.",
+                       "Leonida’s environment is becoming more dynamic. Localized weather allows sunshine in one area while rain falls elsewhere, leaving persistent puddles after storms pass. Tropical storms and hurricanes are confirmed, although their gameplay effects remain undisclosed. More than 170 animal species populate the land, air, and water, with certain creatures available to track across Rare, Discoverable, and Legendary categories.",
+                       "On PlayStation 5, the experience also includes DualSense haptic feedback, adaptive triggers, 3D audio, and fast loading, extending the improvements beyond what players see on screen."
+                   ],
+    "formattedParagraphs":  [
+                                {
+                                    "runs":  [
+                                                 {
+                                                     "text":  "Grand Theft Auto VI",
+                                                     "bold":  false,
+                                                     "italic":  true
+                                                 },
+                                                 {
+                                                     "text":  " brings modern-day Vice City and the surrounding state of Leonida to life with deeper crime systems, more responsive characters, and new ways to spend your time between missions.",
+                                                     "bold":  false,
+                                                     "italic":  false
+                                                 }
+                                             ]
+                                },
+                                {
+                                    "runs":  [
+                                                 {
+                                                     "text":  "At the center are ",
+                                                     "bold":  false,
+                                                     "italic":  false
+                                                 },
+                                                 {
+                                                     "text":  "Jason Duval and Lucia Caminos",
+                                                     "bold":  true,
+                                                     "italic":  false
+                                                 },
+                                                 {
+                                                     "text":  ", two playable protagonists who can explore separately or together. Their relationship is something players can influence: spending time together strengthens their connection, while neglecting it can affect how their story unfolds. Romance is optional; their criminal partnership remains central.",
+                                                     "bold":  false,
+                                                     "italic":  false
+                                                 }
+                                             ]
+                                },
+                                {
+                                    "runs":  [
+                                                 {
+                                                     "text":  "A new ",
+                                                     "bold":  false,
+                                                     "italic":  false
+                                                 },
+                                                 {
+                                                     "text":  "Criminal Profile",
+                                                     "bold":  true,
+                                                     "italic":  false
+                                                 },
+                                                 {
+                                                     "text":  " tracks patterns in your behavior, influencing reactions and narrative details. Encounters offer more choices, including intimidation, fighting, and incapacitating someone. Pedestrians also respond more closely to your presence, potentially noticing when you follow them or overhear their conversations.",
+                                                     "bold":  false,
+                                                     "italic":  false
+                                                 }
+                                             ]
+                                },
+                                {
+                                    "runs":  [
+                                                 {
+                                                     "text":  "Police pursuits introduce more detailed identification. Officers can know your clothing, vehicle, and whether you are traveling together. Changing those details helps you escape detection. Gameplay footage also shows switching between protagonists during combat and more precise targeting of opponents’ body parts.",
+                                                     "bold":  false,
+                                                     "italic":  false
+                                                 }
+                                             ]
+                                },
+                                {
+                                    "runs":  [
+                                                 {
+                                                     "text":  "Car theft becomes a more involved activity.",
+                                                     "bold":  true,
+                                                     "italic":  false
+                                                 },
+                                                 {
+                                                     "text":  " Certain parked vehicles require tools unlocked through progression, including key cloners and slim ",
+                                                     "bold":  false,
+                                                     "italic":  false
+                                                 },
+                                                 {
+                                                     "text":  "jims",
+                                                     "bold":  false,
+                                                     "italic":  false
+                                                 },
+                                                 {
+                                                     "text":  ". A phone scanner reveals alarms, trackers, and resale values, giving players useful information before choosing a target.",
+                                                     "bold":  false,
+                                                     "italic":  false
+                                                 }
+                                             ]
+                                },
+                                {
+                                    "runs":  [
+                                                 {
+                                                     "text":  "Everyday life receives attention, too. Gym workouts can increase strength and muscularity, while overeating adds weight. Players can browse the in-game ",
+                                                     "bold":  false,
+                                                     "italic":  false
+                                                 },
+                                                 {
+                                                     "text":  "Snapmatic",
+                                                     "bold":  false,
+                                                     "italic":  false
+                                                 },
+                                                 {
+                                                     "text":  " social feed, although Jason and Lucia cannot post. Personal vehicles also hold purchased weapons and spare outfits.",
+                                                     "bold":  false,
+                                                     "italic":  false
+                                                 }
+                                             ]
+                                },
+                                {
+                                    "runs":  [
+                                                 {
+                                                     "text":  "Away from robberies and police chases, the gameplay ",
+                                                     "bold":  false,
+                                                     "italic":  false
+                                                 },
+                                                 {
+                                                     "text":  "showcase",
+                                                     "bold":  false,
+                                                     "italic":  false
+                                                 },
+                                                 {
+                                                     "text":  " features ",
+                                                     "bold":  false,
+                                                     "italic":  false
+                                                 },
+                                                 {
+                                                     "text":  "basketball, kayaking, scuba diving, weightlifting, dirt biking, airboats, and skydiving",
+                                                     "bold":  true,
+                                                     "italic":  false
+                                                 },
+                                                 {
+                                                     "text":  ". Together, these new and returning activities give players plenty to explore outside the main story.",
+                                                     "bold":  false,
+                                                     "italic":  false
+                                                 }
+                                             ]
+                                },
+                                {
+                                    "runs":  [
+                                                 {
+                                                     "text":  "Leonida’s environment is becoming more dynamic. Localized weather allows sunshine in one area while rain falls elsewhere, leaving persistent puddles after storms pass. Tropical storms and hurricanes are confirmed, although their gameplay effects remain undisclosed. More than ",
+                                                     "bold":  false,
+                                                     "italic":  false
+                                                 },
+                                                 {
+                                                     "text":  "170 animal species",
+                                                     "bold":  true,
+                                                     "italic":  false
+                                                 },
+                                                 {
+                                                     "text":  " populate the land, air, and water, with certain creatures available to track across Rare, Discoverable, and Legendary categories.",
+                                                     "bold":  false,
+                                                     "italic":  false
+                                                 }
+                                             ]
+                                },
+                                {
+                                    "runs":  [
+                                                 {
+                                                     "text":  "On PlayStation 5, the experience also includes ",
+                                                     "bold":  false,
+                                                     "italic":  false
+                                                 },
+                                                 {
+                                                     "text":  "DualSense",
+                                                     "bold":  false,
+                                                     "italic":  false
+                                                 },
+                                                 {
+                                                     "text":  " haptic feedback, adaptive triggers, 3D audio, and fast loading, extending the improvements beyond what players see on screen.",
+                                                     "bold":  false,
+                                                     "italic":  false
+                                                 }
+                                             ]
+                                }
+                            ]
+}
