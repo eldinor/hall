@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en" data-app-state="loading"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#111019"><title>EXALTED · Interactive 3D magazine</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Cpath d=%22M16 3 29 16 16 29 3 16Z%22 fill=%22none%22 stroke=%22%23d9c39c%22 stroke-width=%223%22/%3E%3C/svg%3E"><style id="startup-styles">
+:root{color-scheme:dark;background:#111019;color:#f2eee6;font-family:"Segoe UI",Arial,Helvetica,sans-serif}body{margin:0;overflow:hidden}
+html:not([data-app-state="ready"]) body>:not(#loading):not(#error):not(#mobile-placeholder):not(script){visibility:hidden}
+#loading{--ink:#070b12;--frost:#dbe6f2;--frost-dim:#7d8ea3;--accent:#8fc4e8;color:var(--frost);font-family:ui-sans-serif,"Inter","Segoe UI",system-ui,sans-serif;font-size:16px;-webkit-font-smoothing:antialiased}
+#loading,#loading *{margin:0;padding:0;box-sizing:border-box}
+    /* ---------------------------------------------------------------- boot */
+
+    #loading {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: grid;
+        place-items: center;
+        background:
+            radial-gradient(120% 90% at 50% 42%, #16202e 0%, #0a1019 55%, #05080d 100%);
+        transition: opacity 900ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    #loading.done { opacity: 0; pointer-events: none; visibility: hidden; transition: opacity 900ms cubic-bezier(0.4, 0, 0.2, 1), visibility 0s 900ms; }
+
+    /* Faint hall-loading-drifting grain so the boot screen is never a flat fill. */
+    #loading::after {
+        content: "";
+        position: absolute;
+        inset: -50%;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+        opacity: 0.035;
+        mix-blend-mode: screen;
+        animation: hall-loading-drift 24s linear infinite;
+        pointer-events: none;
+    }
+
+    @keyframes hall-loading-drift {
+        from { transform: translate3d(0, 0, 0); }
+        to   { transform: translate3d(-160px, -160px, 0); }
+    }
+
+    #loading .boot-inner {
+        position: relative;
+        z-index: 1;
+        width: min(560px, 78vw);
+        text-align: center;
+    }
+
+    #loading .wordmark {
+        display: block;
+        width: clamp(120px, 22vw, 220px);
+        max-width: 100%;
+        height: auto;
+        margin: 0 auto;
+        opacity: 0;
+        animation: hall-loading-rise 1400ms cubic-bezier(0.16, 1, 0.3, 1) 120ms forwards;
+    }
+
+    #loading .tagline {
+        margin-top: 1.4em;
+        font-size: 11px;
+        font-weight: 400;
+        letter-spacing: 0.34em;
+        text-indent: 0.34em;
+        text-transform: uppercase;
+        color: var(--frost-dim);
+        opacity: 0;
+        animation: hall-loading-rise 1400ms cubic-bezier(0.16, 1, 0.3, 1) 420ms forwards;
+    }
+
+    #loading .hall-label {
+        display: block;
+        margin-top: 8px;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 16px;
+        font-style: italic;
+        letter-spacing: 0.16em;
+        text-indent: 0.16em;
+        text-transform: none;
+    }
+
+    @keyframes hall-loading-rise {
+        from { opacity: 0; transform: translate3d(0, 14px, 0); }
+        to   { opacity: 1; transform: none; }
+    }
+
+    #loading .bar {
+        position: relative;
+        margin: 3.6em auto 0;
+        width: 100%;
+        height: 1px;
+        background: rgba(219, 230, 242, 0.13);
+        overflow: hidden;
+    }
+
+    #loading .bar-fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 0%;
+        background: linear-gradient(90deg, transparent, var(--accent) 60%, #eaf4ff);
+        box-shadow: 0 0 14px rgba(143, 196, 232, 0.55);
+        transition: width 380ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    #loading .phase {
+        margin-top: 1.5em;
+        height: 1em;
+        font-size: 10px;
+        font-weight: 400;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--frost-dim);
+        font-variant-numeric: tabular-nums;
+    }
+
+@media(prefers-reduced-motion:reduce){#loading,#loading::after,#loading .wordmark,#loading .tagline,#loading .bar-fill{animation:none!important;transition:none!important}#loading .wordmark,#loading .tagline{opacity:1}}
+#error{position:fixed;z-index:200;inset:40% 15%;background:#21172b;color:#f2eee6;padding:40px;text-align:center;font:16px "Segoe UI",Arial,sans-serif}
+
+#mobile-placeholder[hidden]{display:none}
+html[data-app-state="mobile"] body{overflow:auto}
+html[data-app-state="mobile"] body>:not(#mobile-placeholder):not(script){display:none!important}
+html[data-app-state="mobile"] #mobile-placeholder{visibility:visible;display:flex;min-height:100dvh;box-sizing:border-box;padding:40px 24px;align-items:center;justify-content:center;text-align:center;flex-direction:column;background:radial-gradient(ellipse at top,#292033,#111019 70%)}
+#mobile-placeholder .mobile-brand{font-size:24px;letter-spacing:4px;color:#d9c39c;margin:0 0 48px}
+#mobile-placeholder h1{font-size:clamp(26px,6vw,38px);line-height:1.2;font-weight:600;max-width:520px;margin:0 0 20px}
+#mobile-placeholder p{max-width:430px;font-size:17px;line-height:1.7;color:#d4c9dc;margin:0}
+</style>  <script type="module" crossorigin src="./assets/entry-CIUF3JLL.js"></script>
+</head><body>
+<main id="mobile-placeholder" hidden aria-labelledby="mobile-title"><div class="mobile-brand">&#9671; EXALTED</div><h1 id="mobile-title">3D is available on desktop only.</h1><p>The mobile version is coming soon. Open EXALTED on a desktop to explore the gallery.</p></main>
+<canvas id="scene" aria-label="Interactive 3D vaulted gallery. Drag to look, use W A S D or arrow keys to walk, and hold Shift to run." tabindex="0"></canvas>
+<div id="loading" role="status" aria-label="Loading The Hall" aria-live="polite">
+ <div class="boot-inner">
+  <img class="wordmark" src="./assets/branding/exalted-logo.svg" alt="Exalted" width="2040" height="700" fetchpriority="high">
+  <div class="tagline">Interactive 3D magazine<span class="hall-label">The Hall</span></div>
+  <div class="bar" role="progressbar" aria-label="Loading The Hall" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="bar-fill" id="boot-bar"></div></div>
+  <div class="phase" id="boot-phase">initialising</div>
+ </div>
+</div>
+<header><a class="brand" href="./" aria-label="EXALTED home"><img class="brand-logo" src="./assets/branding/exalted-logo.svg" alt="EXALTED" width="2040" height="700"><small>Interactive 3D magazine</small></a><div class="header-right"><button id="sound" aria-label="Enable ambient sound" title="Ambient sound">♫ <span>SOUND OFF</span></button><button id="help" aria-label="Show controls">?</button></div></header>
+
+<footer><nav class="views" aria-label="Camera views"><button class="active" data-view="entrance">Entrance</button><button data-view="nave">The nave</button><button data-view="portal">Exalted</button></nav><div id="hint" class="hint">DRAG TO LOOK <span>·</span> WASD OR SCROLL TO WALK <span>·</span> SELECT AN ARTWORK</div><div class="footer-right"><button id="tour">▷ <span>Guided tour</span></button><button id="fullscreen" aria-label="Toggle fullscreen">⛶</button></div></footer>
+<dialog id="article"><button id="close" aria-label="Close article">×</button><div id="article-art"></div><div class="article-copy"><div class="article-nav"><button id="previous">← Previous</button><span id="article-index"></span><button id="next">Next →</button></div><span id="article-category" class="eyebrow"></span><h2 id="article-title"></h2><p id="article-subtitle" hidden></p><p id="article-byline" hidden></p><div id="article-description"></div><button id="read-more" class="article-read-more" aria-controls="article-description" aria-expanded="false" hidden>Read more</button><p class="article-note">A concept study from the inaugural collection. Each frame is a window into a world waiting to be written.</p></div></dialog>
+<dialog id="artwork-viewer" aria-label="Enlarged artwork"><button id="close-artwork" aria-label="Close enlarged artwork">×</button><img id="enlarged-artwork" alt=""></dialog>
+<dialog id="controls"><button id="close-help" aria-label="Close controls">×</button><span class="eyebrow">MAKE YOURSELF AT HOME</span><h2>Wander a little.</h2><p>Drag to look around. Scroll or use <b>W A S D</b> / arrow keys to walk. Hold <b>Shift</b> to run. Select any of the eight artworks to open its story.</p><p>Choose a viewpoint below, or let the guided tour take you through the collection.</p><button class="primary" id="got-it">Let's explore ↗</button></dialog>
+<div id="error" hidden>Your browser could not start the 3D gallery. Please enable WebGPU or WebGL and reload.</div></body></html>
