@@ -120,9 +120,11 @@ async function start(){
  for(let z=-8;z<50;z+=10){const ring=B.MeshBuilder.CreateTorus('Aisle medallion',{diameter:2.3,thickness:.025,tessellation:64},scene);ring.position=v(0,.035,z);ring.material=gold;const inner=B.MeshBuilder.CreateTorus('Inner medallion',{diameter:1.9,thickness:.018,tessellation:48},scene);inner.position=v(0,.04,z);inner.material=gold}
  const frames=[];
  const isV2=document.body.dataset.hallVersion==='2';
+ const isV3=document.body.dataset.hallVersion==='3';
  const usesVitrinePages=article=>isV2&&article.artSeed===5;
+ const usesPdfVitrine=article=>isV3&&article.artSeed===5;
  const isTestVitrine=article=>isV2&&article.index<2;
- const hasArticlePopup=article=>!usesVitrinePages(article)&&!isTestVitrine(article);
+ const hasArticlePopup=article=>!usesVitrinePages(article)&&!usesPdfVitrine(article)&&!isTestVitrine(article);
  articles.forEach((article,i)=>{
   const side=i%2===0?-1:1,z=2+Math.floor(i/2)*11;const root=new B.TransformNode('Exhibit '+(i+1),scene);root.position=v(side*7.8,0,z);
   // Cylindrical billboards use the exhibit's -Z article face and stay level.
@@ -210,6 +212,7 @@ async function start(){
  canvas.addEventListener('wheel',e=>{if($('#article').open||$('#controls').open)return;e.preventDefault();stopTour();travel=null;syncWalkingCollider();const direction=camera.getForwardRay().direction;camera._collideWithWorld(direction.scale(Math.sign(e.deltaY)*1.15));},{passive:false});
  function resumeNavigation(){if(document.querySelector('dialog[open]'))return;camera.attachControl(canvas,true);canvas.focus({preventScroll:true})}
  const keyboardNavigation=createKeyboardNavigation({scene,camera,canvas,onNavigate:()=>{camera.attachControl(canvas,true);stopTour();travel=null;document.body.classList.add('exploring')}});
+ const pdfViewer=isV3?(await import('./pdf-viewer.js')).createPdfViewer({url:`${import.meta.env.BASE_URL}covers/Urgent_V5o.pdf`,scene,onOpen:()=>{stopTour();travel=null;keyboardNavigation.clear();camera.detachControl()},onClose:resumeNavigation}):null;
  canvas.addEventListener('keydown',()=>{stopTour();travel=null;document.body.classList.add('exploring')});canvas.addEventListener('pointerdown',()=>{travel=null;stopTour();resumeNavigation()});
  function turnVitrinePage(panel){
   const {imagePages}=panel.metadata;panel.metadata.pageIndex=(panel.metadata.pageIndex+1)%imagePages.length;
@@ -221,7 +224,7 @@ async function start(){
  scene.onPointerObservable.add(info=>{
   const picked=info.pickInfo?.pickedMesh;
   if(picked?.metadata?.imagePages&&(info.type===B.PointerEventTypes.POINTERTAP||info.type===B.PointerEventTypes.POINTERDOUBLETAP))turnVitrinePage(picked);
-  else if(info.type===B.PointerEventTypes.POINTERTAP&&picked?.metadata?.article!==undefined)openArticle(picked.metadata.article);
+  else if(info.type===B.PointerEventTypes.POINTERTAP&&picked?.metadata?.article!==undefined){if(usesPdfVitrine(articles[picked.metadata.article]))pdfViewer.open();else openArticle(picked.metadata.article)}
   if(info.type===B.PointerEventTypes.POINTERMOVE)canvas.style.cursor=picked?.metadata?'pointer':'grab';
  });
  function renderArticleBody(expanded=false){
@@ -347,5 +350,5 @@ async function start(){
  }).catch(startupError);
  engine.runRenderLoop(()=>scene.render());window.addEventListener('resize',()=>engine.resize());
  // Exposed read-only diagnostics and inspection helpers for browser QA.
- window.hall={scene,camera,frames,articles,setView,openArticle,engine,rendererInfo,pipeline,columnLights,columnLightCluster,lightingDebug,windowGlass,visuals,lanterns,atmosphere,entrancePortal,hubPortal,rearGroundFog,htmlVitrine,discordVitrine,get qualityProfile(){return visuals.getProfile()},get renderMetrics(){return visuals.getMetrics()}};
+ window.hall={scene,camera,frames,articles,setView,openArticle,engine,rendererInfo,pipeline,columnLights,columnLightCluster,lightingDebug,windowGlass,visuals,lanterns,atmosphere,entrancePortal,hubPortal,rearGroundFog,htmlVitrine,discordVitrine,pdfViewer,get qualityProfile(){return visuals.getProfile()},get renderMetrics(){return visuals.getMetrics()}};
 }

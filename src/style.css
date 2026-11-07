@@ -34,6 +34,23 @@ header,footer,dialog{z-index:3}
 #artwork-viewer[open]{display:flex;align-items:center;justify-content:center}
 #artwork-viewer::backdrop{background:#080610ee}
 #enlarged-artwork{display:block;height:100%;width:auto;max-width:100%;object-fit:contain}
+/* Urgent_V5o.pdf pages are 526.5 x 768; keep the reader at page width. */
+#pdf-viewer{--pdf-page-ratio:.685546875;--pdf-fit-width:min(calc((100dvh - 80px)*var(--pdf-page-ratio) + 16px),85vw);width:var(--pdf-fit-width);height:min(calc(100dvh - 32px),calc((85vw - 16px)/var(--pdf-page-ratio) + 48px));max-width:85vw;max-height:none;margin:auto;padding:0;border:1px solid #ceb17b55;background:#18141f;overflow:hidden;box-shadow:0 25px 150px #000b}
+#pdf-viewer.is-zoomed{width:min(calc(var(--pdf-fit-width)*1.5),85vw);height:calc(100dvh - 32px)}
+#pdf-viewer[open]{display:flex;flex-direction:column}
+#pdf-viewer::backdrop{background:#080610b8;backdrop-filter:blur(10px)}
+#article-pdf{position:relative;display:block;width:100%;flex:1;min-height:0;border:0;overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#a797bf #25202f;color:#dfd4e7}
+.pdf-page{width:100%;margin:0 0 12px;background:#fff}
+.pdf-page:last-child{margin-bottom:0}
+.pdf-page canvas{display:block;width:100%;height:auto}
+.pdf-viewer-footer{height:48px;flex-shrink:0;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:0 14px;border-top:1px solid #ceb17b55}
+.pdf-page-info{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.pdf-next-slot{text-align:right}
+.pdf-page-count{font-size:14px;color:#aaa4b1}
+#pdf-previous-page,#pdf-next-page,#pdf-zoom{min-height:36px;padding:4px 10px;border:1px solid #d9c39c70;border-radius:4px;font-size:16px;color:#e5cfa8;white-space:nowrap}
+#pdf-zoom{width:36px;padding:4px;line-height:0}
+#pdf-viewer.is-zoomed .pdf-zoom-plus{display:none}
+#pdf-previous-page:hover,#pdf-next-page:hover,#pdf-zoom:hover{background:#d9c39c15}
 #close-artwork{position:absolute;right:16px;top:12px;width:44px;height:44px;border-radius:4px;background:#18141fe6;color:#f0dbb8;font-size:32px;z-index:1}
 @media(max-width:850px){#article.has-full-article #article-art{position:static;height:30dvh}}
 .portal-prompt{position:fixed;left:50%;bottom:120px;transform:translateX(-50%);z-index:5;margin:0;padding:14px 22px;max-width:calc(100vw - 40px);box-sizing:border-box;border:1px solid #d9c39c66;border-radius:6px;background:#18141fed;color:#f2eee6;box-shadow:0 8px 32px #0008;font-size:17px;text-align:center;pointer-events:none}
