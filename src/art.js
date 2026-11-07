@@ -19,8 +19,8 @@ const exhibitContent = [
 ].map(([title,category,description,light,dark],i)=>{
  const content=i===0?gtaVi:i===1?fakerWorlds:i===2?halloween:i===3?militaryGaming:i===4?wowForever:i===5?runescape:i===6?minecraftCoach:i===7?gamersGolf:null;
  return {title,category,description,light,dark,index:i,
-  cover:i===0?'covers/Official_Cover_Art_portrait.webp':i===1?'covers/Faker_portrait_in_Worlds_26_artwork.webp':i===4?'covers/Dramatic_god_rays_across_the_Warcraft_poster.webp':i===5?'covers/RuneScape-Gold-Rush-Edited1.webp':i===2?'covers/halloween_comic_whatever_fixed.webp':i===6?'covers/Minecraft_Coach_Tomlin.webp':i===3?'covers/Military_branches_and_iconic_gaming_logos.webp':i===7?'covers/Golfers_and_operators_above_the_city.webp':null,
-  coverAspect:i===0?1080/1920:i===1?1024/1536:i===2?706/1024:i===3?1024/1536:i===4?706/1412:i===5?1024/1536:i===6?1024/1536:i===7?1024/1536:null,
+  cover:i===0?'covers/Official_Cover_Art_portrait.webp':i===1?'covers/Faker_portrait_in_Worlds_26_artwork.webp':i===4?'covers/Dramatic_god_rays_across_the_Warcraft_poster.webp':i===5?'covers/venez_Page_1.png':i===2?'covers/halloween_comic_whatever_fixed.webp':i===6?'covers/Minecraft_Coach_Tomlin.webp':i===3?'covers/Military_branches_and_iconic_gaming_logos.webp':i===7?'covers/Golfers_and_operators_above_the_city.webp':null,
+  coverAspect:i===0?1080/1920:i===1?1024/1536:i===2?706/1024:i===3?1024/1536:i===4?706/1412:i===5?832/1206:i===6?1024/1536:i===7?1024/1536:null,
   paragraphs:content?.paragraphs??null,formattedParagraphs:content?.formattedParagraphs??null,
   subtitle:content?.subtitle??'',byline:content?.byline??'',preview:content?.preview??''};
 });

@@ -119,23 +119,34 @@ async function start(){
  for(const x of [-3,3])box('Central aisle brass inlay',.045,.02,76,x,.03,18,gold);
  for(let z=-8;z<50;z+=10){const ring=B.MeshBuilder.CreateTorus('Aisle medallion',{diameter:2.3,thickness:.025,tessellation:64},scene);ring.position=v(0,.035,z);ring.material=gold;const inner=B.MeshBuilder.CreateTorus('Inner medallion',{diameter:1.9,thickness:.018,tessellation:48},scene);inner.position=v(0,.04,z);inner.material=gold}
  const frames=[];
+ const isV2=document.body.dataset.hallVersion==='2';
+ const usesVitrinePages=article=>isV2&&article.artSeed===5;
+ const isTestVitrine=article=>isV2&&article.index<2;
+ const hasArticlePopup=article=>!usesVitrinePages(article)&&!isTestVitrine(article);
  articles.forEach((article,i)=>{
   const side=i%2===0?-1:1,z=2+Math.floor(i/2)*11;const root=new B.TransformNode('Exhibit '+(i+1),scene);root.position=v(side*7.8,0,z);
   // Cylindrical billboards use the exhibit's -Z article face and stay level.
   root.rotation.y=Math.atan2(root.position.x-camera.position.x,root.position.z-camera.position.z);
-  const plinth=box('Black marble pedestal',4.55,.95,1.65,0,.48,0,black,root);plinth.material=black;
-  box('Pedestal brass foot',4.65,.065,1.75,0,.08,0,warm,root);box('Pedestal cornice',4.75,.16,1.85,0,.99,0,gold,root);
-  box('Exhibit backing',4.2,6.3,.24,0,4.35,0,black,root);
-  for(const x of [-2.12,2.12]){box('Gilded upright',.09,6.5,.3,x,4.35,-.03,gold,root);box('Luminous inner edge',.022,6.26,.025,x*.965,4.35,-.19,side<0?warm:purple,root)}
-  for(const y of [1.12,7.58]){box('Gilded lintel',4.32,.09,.3,0,y,-.03,gold,root);box('Luminous edge',4.1,.022,.025,0,y+(y<2?.09:-.09),-.19,side<0?warm:purple,root)}
+  const landscape=isTestVitrine(article),backWidth=landscape?6.3:4.2,backHeight=landscape?4.2:6.3;
+  const plinth=box('Black marble pedestal',landscape?6.65:4.55,.95,1.65,0,.48,0,black,root);plinth.material=black;
+  box('Pedestal brass foot',landscape?6.75:4.65,.065,1.75,0,.08,0,warm,root);box('Pedestal cornice',landscape?6.85:4.75,.16,1.85,0,.99,0,gold,root);
+  box('Exhibit backing',backWidth,backHeight,.24,0,4.35,0,black,root);
+  for(const x of [-backWidth/2-.02,backWidth/2+.02]){box('Gilded upright',.09,backHeight+.2,.3,x,4.35,-.03,gold,root);box('Luminous inner edge',.022,backHeight-.04,.025,x-Math.sign(x)*.074,4.35,-.19,side<0?warm:purple,root)}
+  for(const offset of [-1,1]){const y=4.35+offset*(backHeight/2+.08);box('Gilded lintel',backWidth+.12,.09,.3,0,y,-.03,gold,root);box('Luminous edge',backWidth-.1,.022,.025,0,y-offset*.09,-.19,side<0?warm:purple,root)}
   let tex;
-  if(article.cover){article.image=import.meta.env.BASE_URL+article.cover;tex=new B.Texture(article.image,scene,false,true,B.Texture.TRILINEAR_SAMPLINGMODE);tex.wrapU=tex.wrapV=B.Texture.CLAMP_ADDRESSMODE}
+  if(landscape){article.image=null}
+  else if(article.cover){article.image=import.meta.env.BASE_URL+article.cover;tex=new B.Texture(article.image,scene,false,true,B.Texture.TRILINEAR_SAMPLINGMODE);tex.wrapU=tex.wrapV=B.Texture.CLAMP_ADDRESSMODE}
   else{const image=paintWorld(article);tex=new B.DynamicTexture('Original artwork '+i,image,scene,false);tex.update()}
   const am=mat(article.title,'#ffffff');am.diffuseTexture=tex;am.emissiveTexture=tex;am.emissiveColor=new B.Color3(.7,.7,.7);am.specularColor=B.Color3.Black();
-  if(article.paragraphs){am.disableLighting=true;am.fogEnabled=false;am.diffuseTexture=null;am.diffuseColor=B.Color3.Black();am.emissiveColor=B.Color3.Black();am.metadata={textureOnlyGlow:true}}
+  if(landscape){am.disableLighting=true;am.fogEnabled=false;am.diffuseTexture=null;am.emissiveTexture=null;am.emissiveColor=C('#101321')}
+  else if(article.paragraphs){am.disableLighting=true;am.fogEnabled=false;am.diffuseTexture=null;am.diffuseColor=B.Color3.Black();am.emissiveColor=B.Color3.Black();am.metadata={textureOnlyGlow:true}}
   // Fit supplied portraits inside the existing vitrine; backing and frame stay fixed.
   const imageAspect=article.coverAspect??4.05/6.18;
-  const panel=B.MeshBuilder.CreatePlane('Artwork '+(i+1),{width:Math.min(4.05,6.18*imageAspect),height:Math.min(6.18,4.05/imageAspect),sideOrientation:B.Mesh.DOUBLESIDE},scene);panel.parent=root;panel.position=v(0,4.35,-.145);panel.material=am;panel.metadata={article:i};frames.push(panel);
+  const panel=B.MeshBuilder.CreatePlane('Artwork '+(i+1),{width:landscape?6.18:Math.min(4.05,6.18*imageAspect),height:landscape?4.05:Math.min(6.18,4.05/imageAspect),sideOrientation:B.Mesh.DOUBLESIDE},scene);panel.parent=root;panel.position=v(0,4.35,-.145);panel.material=am;panel.metadata=landscape?{testVitrine:true,displayRole:'article'}:{article:i};panel.isPickable=!landscape;frames.push(panel);
+  if(usesVitrinePages(article)){
+   const secondPage=new B.Texture(`${import.meta.env.BASE_URL}covers/venez_Page_2.png`,scene,false,true,B.Texture.TRILINEAR_SAMPLINGMODE);secondPage.wrapU=secondPage.wrapV=B.Texture.CLAMP_ADDRESSMODE;
+   panel.metadata.imagePages=[{texture:tex,aspect:imageAspect},{texture:secondPage,aspect:971/1408}];panel.metadata.pageIndex=0;
+  }
   const emblem=B.MeshBuilder.CreatePolyhedron('Plinth crystal',{type:1,size:.15},scene);emblem.parent=root;emblem.position=v(0,.52,-.85);emblem.material=purple;
  });
  // The final portal repeats the arch motif in nested, luminous layers.
@@ -166,10 +177,12 @@ async function start(){
  const groups=new Map();for(const m of [...scene.meshes]){if([floor,crystal,wire,sign].includes(m)||m.metadata||m.parent)continue;m.computeWorldMatrix(true);if(!groups.has(m.material))groups.set(m.material,[]);groups.get(m.material).push(m)}
  for(const meshes of groups.values()){if(meshes.length>1){const merged=B.Mesh.MergeMeshes(meshes,true,true,undefined,false,false);if(merged)merged.isPickable=false}}
  for(const mesh of scene.meshes)if(!mesh.parent&&!mesh.metadata?.skybox&&![crystal,wire].includes(mesh))mesh.freezeWorldMatrix();
+ const htmlVitrine=isV2?(await import('./html-vitrine.js')).createHtmlVitrine({scene,camera,canvas,parents:frames.slice(0,2).map(frame=>frame.parent),articles:articles.slice(0,2)}):null;
  const entrancePortal=createEntrancePortal({scene,camera});
  const hubPortal=createHubPortal({scene,camera});
+ const discordVitrine=document.body.dataset.hallVersion==='3'?(await import('./discord-vitrine.js')).createDiscordVitrine({scene,camera,position:v(-hubPortal.root.position.x,0,hubPortal.root.position.z),materials:{black,gold,warm,purple}}):null;
  const rearGroundFog=createRearGroundFog(scene);
- scene.meshes.forEach(m=>{if(!m.metadata)m.isPickable=false});mirror.renderList=scene.meshes.filter(m=>m!==floor);
+ scene.meshes.forEach(m=>{if(!m.metadata)m.isPickable=false});mirror.renderList=scene.meshes.filter(m=>m!==floor&&!m.metadata?.htmlVitrine);
  // Create clustering after merging so Babylon's internal light proxy stays separate.
  if(B.ClusteredLightContainer.IsLightSupported(columnLights[0])){
   columnLightCluster=new B.ClusteredLightContainer('Column globe cluster',columnLights,scene);
@@ -198,7 +211,19 @@ async function start(){
  function resumeNavigation(){if(document.querySelector('dialog[open]'))return;camera.attachControl(canvas,true);canvas.focus({preventScroll:true})}
  const keyboardNavigation=createKeyboardNavigation({scene,camera,canvas,onNavigate:()=>{camera.attachControl(canvas,true);stopTour();travel=null;document.body.classList.add('exploring')}});
  canvas.addEventListener('keydown',()=>{stopTour();travel=null;document.body.classList.add('exploring')});canvas.addEventListener('pointerdown',()=>{travel=null;stopTour();resumeNavigation()});
- scene.onPointerObservable.add(info=>{if(info.type===B.PointerEventTypes.POINTERTAP&&info.pickInfo?.pickedMesh?.metadata?.article!==undefined)openArticle(info.pickInfo.pickedMesh.metadata.article);if(info.type===B.PointerEventTypes.POINTERMOVE)canvas.style.cursor=info.pickInfo?.pickedMesh?.metadata?'pointer':'grab'});
+ function turnVitrinePage(panel){
+  const {imagePages}=panel.metadata;panel.metadata.pageIndex=(panel.metadata.pageIndex+1)%imagePages.length;
+  const next=imagePages[panel.metadata.pageIndex],originalAspect=imagePages[0].aspect;
+  next.texture.level=panel.material.emissiveTexture.level;panel.material.emissiveTexture=next.texture;
+  panel.scaling.x=Math.min(4.05,6.18*next.aspect)/Math.min(4.05,6.18*originalAspect);
+  panel.scaling.y=Math.min(6.18,4.05/next.aspect)/Math.min(6.18,4.05/originalAspect);
+ }
+ scene.onPointerObservable.add(info=>{
+  const picked=info.pickInfo?.pickedMesh;
+  if(picked?.metadata?.imagePages&&(info.type===B.PointerEventTypes.POINTERTAP||info.type===B.PointerEventTypes.POINTERDOUBLETAP))turnVitrinePage(picked);
+  else if(info.type===B.PointerEventTypes.POINTERTAP&&picked?.metadata?.article!==undefined)openArticle(picked.metadata.article);
+  if(info.type===B.PointerEventTypes.POINTERMOVE)canvas.style.cursor=picked?.metadata?'pointer':'grab';
+ });
  function renderArticleBody(expanded=false){
   const article=articles[selected],paragraphs=article.paragraphs||[article.description];
   const showingPreview=!expanded&&!!article.preview;
@@ -219,7 +244,8 @@ async function start(){
   $('#read-more').setAttribute('aria-expanded',String(expanded));
  }
  function openArticle(i){
-  selected=(i+8)%8;const article=articles[selected];
+  const index=(i+8)%8;if(!hasArticlePopup(articles[index]))return;
+  selected=index;const article=articles[selected];
   $('#article-art').style.backgroundImage=`url(${article.image})`;
   const enlargeable=article.artSeed===2;
   $('#article-art').classList.toggle('can-expand',enlargeable);
@@ -240,7 +266,8 @@ async function start(){
  $('#article-art').addEventListener('keydown',event=>{if(articles[selected].artSeed===2&&(event.key==='Enter'||event.key===' ')){event.preventDefault();enlargeArtwork()}});
  $('#close-artwork').onclick=()=>$('#artwork-viewer').close();
  $('#artwork-viewer').addEventListener('click',event=>{if(event.target===$('#artwork-viewer'))$('#artwork-viewer').close()});
- $('#close').onclick=()=>$('#article').close();$('#article').addEventListener('close',resumeNavigation);$('#previous').onclick=()=>openArticle(selected-1);$('#next').onclick=()=>openArticle(selected+1);
+ function adjacentArticle(direction){let index=selected;do{index=(index+direction+articles.length)%articles.length}while(!hasArticlePopup(articles[index]));openArticle(index)}
+ $('#close').onclick=()=>$('#article').close();$('#article').addEventListener('close',resumeNavigation);$('#previous').onclick=()=>adjacentArticle(-1);$('#next').onclick=()=>adjacentArticle(1);
  $('#help').onclick=()=>{$('#controls').showModal();camera.detachControl()};$('#close-help').onclick=$('#got-it').onclick=()=>$('#controls').close();$('#controls').addEventListener('close',resumeNavigation);
  for(const dialog of [$('#article'),$('#controls')]){
   let pressedOutside=false;
@@ -300,6 +327,7 @@ async function start(){
   }
   // Update once for the visitor camera so floor reflections share the same pose.
   for(const panel of frames){const root=panel.parent;const dx=root.position.x-camera.position.x,dz=root.position.z-camera.position.z;if(dx*dx+dz*dz>.0001)root.rotation.y=Math.atan2(dx,dz)}
+  discordVitrine?.update();
  });
  // Keep the HTML loader up until all surface maps and scene resources are
  // ready, then let a complete rendered frame reach the canvas before revealing UI.
@@ -319,5 +347,5 @@ async function start(){
  }).catch(startupError);
  engine.runRenderLoop(()=>scene.render());window.addEventListener('resize',()=>engine.resize());
  // Exposed read-only diagnostics and inspection helpers for browser QA.
- window.hall={scene,camera,frames,articles,setView,openArticle,engine,rendererInfo,pipeline,columnLights,columnLightCluster,lightingDebug,windowGlass,visuals,lanterns,atmosphere,entrancePortal,hubPortal,rearGroundFog,get qualityProfile(){return visuals.getProfile()},get renderMetrics(){return visuals.getMetrics()}};
+ window.hall={scene,camera,frames,articles,setView,openArticle,engine,rendererInfo,pipeline,columnLights,columnLightCluster,lightingDebug,windowGlass,visuals,lanterns,atmosphere,entrancePortal,hubPortal,rearGroundFog,htmlVitrine,discordVitrine,get qualityProfile(){return visuals.getProfile()},get renderMetrics(){return visuals.getMetrics()}};
 }

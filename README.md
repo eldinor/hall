@@ -11,13 +11,28 @@ npm install
 npm run dev
 ```
 
-Open the printed local URL. `npm run build` creates `dist/`; `npm run preview` serves that production build. This project does not automatically publish or push to GitHub.
+Open the printed local URL. `npm run build` creates `dist/`; `npm run preview` serves that production build.
+
+## GitHub Pages
+
+Both `index.html` and `v2.html` are built, with relative asset paths for project hosting. The local `gh-pages` branch contains the prepared static site, including `.nojekyll`. Publishing is manual:
+
+1. Push the prepared branch: `git push origin gh-pages`.
+2. In GitHub repository settings, select **Pages > Source > Deploy from a branch**.
+3. Select **gh-pages** and **/ (root)**, then save.
+
+Publishing from a private repository requires an eligible GitHub plan. The repository visibility is not changed by this setup.
+
+- Main page: https://eldinor.github.io/hall/
+- Version 2: https://eldinor.github.io/hall/v2.html
+
+Version 2 displays the RuneScape article directly in its 3D vitrine: clicking alternates between `venez_Page_1.png` and `venez_Page_2.png`, without opening an HTML article popup. The main page retains its article popup.
 
 Drag to look; use WASD, arrow keys or the wheel to move. Hold Shift with WASD or arrow keys to run at twice the walking speed. Select an artwork to read its story. Entrance, The nave and The portal provide camera presets. Guided tour starts at the current entrance spawn, runs for 30 seconds with eased movement and four article highlights, and ends at the Portal overview (7 m before its former endpoint) with a clear view of the central pedestal and the EXALTED / Interactive 3D magazine inscription. Every pedestal and frame turns toward the visitor while staying upright. Ambient audio is optional and off initially.
 
 ## Entrance return portal
 
-Turn around at the entrance to see the open violet/cyan portal behind the spawn point. When nearby and facing it, the message "Press E to return to Sandbox" appears. Press E to open https://test6.babylonpress.org/. Moving away or looking away hides the message. The portal has no collision and walking through it does not navigate; the back wall remains solid. The ring and swirling interior reuse the exalted-sandbox portal shaders, with matching GLSL shaders for WebGL compatibility. Reduced motion freezes the portal animation. Pressing E emits `exalted:portal-entered` once before navigation; inspect `hall.entrancePortal.getState()` for its position and destination.
+Turn around at the entrance to see the open violet/cyan portal behind the spawn point. When nearby and facing it, the message "Press E to return to Sandbox" appears. Press E to open https://eldinor.github.io/exalted-sandbox/. Moving away or looking away hides the message. The portal has no collision and walking through it does not navigate; the back wall remains solid. The ring and swirling interior reuse the exalted-sandbox portal shaders, with matching GLSL shaders for WebGL compatibility. Reduced motion freezes the portal animation. Pressing E emits `exalted:portal-entered` once before navigation; inspect `hall.entrancePortal.getState()` for its position and destination.
 
 A localized, gently drifting ground-fog bank sits outside the rear wall, behind the return portal. It masks the low skybox horizon and fades upward, preserving the upper stars and the forward gallery view. Reduced motion freezes its drift. Inspect `hall.rearGroundFog.getState()`; run `node verify-rear-fog.mjs` to compare rear/forward views with fog enabled and disabled on both renderers.
 

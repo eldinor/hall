@@ -14,7 +14,7 @@ export function createVisualSystem({scene,engine,camera,pipeline,mirror,surfaces
  const probe=new B.ReflectionProbe('Pedestal marble reflections',256,scene,true);
  probe.renderParticles=false;probe.position.set(0,1.2,18);probe.renderList=[];probe.cubeTexture.gammaSpace=false;probe.cubeTexture.refreshRate=B.RenderTargetTexture.REFRESHRATE_RENDER_ONCE;
  surfaces.gold.reflectionTexture=windowGlass.reflection;surfaces.black.reflectionTexture=probe.cubeTexture;
- const reflectionMeshes=scene.meshes.filter(m=>m.name!=='Polished marble floor'&&!windowGlass.materials.includes(m.material)&&m.material!==surfaces.gold&&m.material!==surfaces.black);
+ const reflectionMeshes=scene.meshes.filter(m=>!m.metadata?.htmlVitrine&&m.name!=='Polished marble floor'&&!windowGlass.materials.includes(m.material)&&m.material!==surfaces.gold&&m.material!==surfaces.black);
  let reflectionSignature='';
  // Keep empty legacy diagnostics for callers inspecting the former shadow rig.
  const spots=[],shadows=[];
@@ -39,7 +39,7 @@ export function createVisualSystem({scene,engine,camera,pipeline,mirror,surfaces
    const geometry=scene.enableGeometryBufferRenderer();
    if(geometry){
     geometry.getGBuffer().renderParticles=false;
-    geometry.renderList=scene.meshes.filter(m=>!windowGlass.materials.includes(m.material)&&!m.metadata?.skybox&&!m.metadata?.lanternGlass&&!m.metadata?.lanternHalo&&!m.metadata?.entrancePortal&&!m.metadata?.hubPortal&&!m.metadata?.rearGroundFog);
+    geometry.renderList=scene.meshes.filter(m=>!m.metadata?.htmlVitrine&&!windowGlass.materials.includes(m.material)&&!m.metadata?.skybox&&!m.metadata?.lanternGlass&&!m.metadata?.lanternHalo&&!m.metadata?.entrancePortal&&!m.metadata?.hubPortal&&!m.metadata?.rearGroundFog);
     // Geometry-buffer depth defaults to zero in empty sky pixels. SSAO treats
     // those as foreground, blacking out windows and the portal at high strength.
     // Clear only linear depth to far distance; leave the other attachments alone.

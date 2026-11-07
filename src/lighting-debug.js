@@ -71,6 +71,7 @@ export function createLightingDebug({scene,camera,canvas,rendererInfo,ambient,fi
   if(columnLightCluster)columnLightCluster.maxRange=settings.columnRange;
   lanterns.setGlow(shades,settings.globeGlow);
   for(const frame of frames){
+   if(frame.metadata?.testVitrine)continue;
    if(frame.material.metadata?.textureOnlyGlow){frame.material.emissiveColor=Color3.Black();frame.material.emissiveTexture.level=settings.artGlow}
    else frame.material.emissiveColor=new Color3(settings.artGlow,settings.artGlow,settings.artGlow);
   }

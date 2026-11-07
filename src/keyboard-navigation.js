@@ -18,7 +18,7 @@ export function createKeyboardNavigation({scene,camera,canvas,onNavigate}){
  };
  const release=code=>{if(held.has(code)){notify('keyup',code,held.get(code));held.delete(code)}};
  const clear=()=>{for(const code of [...held.keys()])release(code);setRunning(false)};
- const blocked=event=>document.querySelector('dialog[open]')||event.target instanceof Element&&event.target.closest('#light-debug,input,textarea,select,[contenteditable]:not([contenteditable="false"])');
+ const blocked=event=>document.querySelector('dialog[open]')||event.target instanceof Element&&event.target.closest('#light-debug,.vitrine-article,input,textarea,select,[contenteditable]:not([contenteditable="false"])');
  const keydown=event=>{
   if(event.key==='Shift'){
    if(!event.ctrlKey&&!event.altKey&&!event.metaKey&&!blocked(event))setRunning(true);
