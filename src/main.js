@@ -137,13 +137,13 @@ async function start(){
   for(const offset of [-1,1]){const y=4.35+offset*(backHeight/2+.08);box('Gilded lintel',backWidth+.12,.09,.3,0,y,-.03,gold,root);box('Luminous edge',backWidth-.1,.022,.025,0,y-offset*.09,-.19,side<0?warm:purple,root)}
   let tex;
   if(landscape){article.image=null}
-  else if(article.cover){article.image=import.meta.env.BASE_URL+article.cover;tex=new B.Texture(article.image,scene,false,true,B.Texture.TRILINEAR_SAMPLINGMODE);tex.wrapU=tex.wrapV=B.Texture.CLAMP_ADDRESSMODE}
+  else if(article.cover){article.image=import.meta.env.BASE_URL+(usesPdfVitrine(article)?'covers/Urgent_V5o-page-1.webp':article.cover);tex=new B.Texture(article.image,scene,false,true,B.Texture.TRILINEAR_SAMPLINGMODE);tex.wrapU=tex.wrapV=B.Texture.CLAMP_ADDRESSMODE}
   else{const image=paintWorld(article);tex=new B.DynamicTexture('Original artwork '+i,image,scene,false);tex.update()}
   const am=mat(article.title,'#ffffff');am.diffuseTexture=tex;am.emissiveTexture=tex;am.emissiveColor=new B.Color3(.7,.7,.7);am.specularColor=B.Color3.Black();
   if(landscape){am.disableLighting=true;am.fogEnabled=false;am.diffuseTexture=null;am.emissiveTexture=null;am.emissiveColor=C('#101321')}
   else if(article.paragraphs){am.disableLighting=true;am.fogEnabled=false;am.diffuseTexture=null;am.diffuseColor=B.Color3.Black();am.emissiveColor=B.Color3.Black();am.metadata={textureOnlyGlow:true}}
   // Fit supplied portraits inside the existing vitrine; backing and frame stay fixed.
-  const imageAspect=article.coverAspect??4.05/6.18;
+  const imageAspect=usesPdfVitrine(article)?526.5/768:article.coverAspect??4.05/6.18;
   const panel=B.MeshBuilder.CreatePlane('Artwork '+(i+1),{width:landscape?6.18:Math.min(4.05,6.18*imageAspect),height:landscape?4.05:Math.min(6.18,4.05/imageAspect),sideOrientation:B.Mesh.DOUBLESIDE},scene);panel.parent=root;panel.position=v(0,4.35,-.145);panel.material=am;panel.metadata=landscape?{testVitrine:true,displayRole:'article'}:{article:i};panel.isPickable=!landscape;frames.push(panel);
   if(usesVitrinePages(article)){
    const secondPage=new B.Texture(`${import.meta.env.BASE_URL}covers/venez_Page_2.png`,scene,false,true,B.Texture.TRILINEAR_SAMPLINGMODE);secondPage.wrapU=secondPage.wrapV=B.Texture.CLAMP_ADDRESSMODE;
@@ -163,7 +163,10 @@ async function start(){
  const portalMat=mat('Central magazine cover','#ffffff');portalMat.disableLighting=true;portalMat.fogEnabled=false;portalMat.specularColor=B.Color3.Black();portalMat.emissiveTexture=coverTexture;
  const portal=B.MeshBuilder.CreatePlane('Portal field',{width:coverWidth,height:coverHeight},scene);portal.position=v(0,7.5,56.5);portal.material=portalMat;
  const crystalHeight=7;
- const crystal=B.MeshBuilder.CreatePolyhedron('Floating astral crystal',{type:1,size:1.15},scene);crystal.position=v(0,crystalHeight,52);crystal.scaling.setAll(.55);crystal.material=purple;
+ const crystal=B.MeshBuilder.CreatePolyhedron('Floating astral crystal',{type:1,size:1.15},scene);crystal.position=v(0,crystalHeight,52);crystal.scaling.setAll(.55);
+ const crystalMaterial=purple.clone('Astral crystal color cycle');crystal.material=crystalMaterial;
+ const crystalViolet=crystalMaterial.diffuseColor.clone(),crystalBlue=C('#3649b9');
+ let crystalColorTime=0;
  const wire=B.MeshBuilder.CreatePolyhedron('Astral brass cage',{type:1,size:1.6},scene);wire.position=crystal.position.clone();wire.scaling.setAll(.55);const wm=mat('Wire brass','#eac58c',1);wm.wireframe=true;wire.material=wm;
  const signTex=new B.DynamicTexture('Sanctuary inscription',{width:1024,height:256},scene,false),sg=signTex.getContext();sg.clearRect(0,0,1024,256);sg.textAlign='center';sg.fillStyle='#e6c692';sg.font='600 72px "Segoe UI", Arial, sans-serif';sg.fillText('EXALTED',512,110);sg.fillStyle='#929bff';sg.font='29px "Segoe UI", Arial, sans-serif';sg.fillText('Interactive 3D magazine',512,172);signTex.hasAlpha=true;signTex.update();const sm=mat('Gold inscription','#ffffff',.8);sm.diffuseTexture=signTex;sm.emissiveTexture=signTex;sm.useAlphaFromDiffuseTexture=true;const sign=B.MeshBuilder.CreatePlane('Hall inscription',{width:8,height:2},scene);sign.position=v(0,1.6,49);sign.material=sm;
  const crownTexture=new B.Texture(`${import.meta.env.BASE_URL}assets/branding/exalted-crown.png`,scene);crownTexture.hasAlpha=true;
@@ -183,8 +186,11 @@ async function start(){
  const entrancePortal=createEntrancePortal({scene,camera});
  const hubPortal=createHubPortal({scene,camera});
  const discordVitrine=document.body.dataset.hallVersion==='3'?(await import('./discord-vitrine.js')).createDiscordVitrine({scene,camera,position:v(-hubPortal.root.position.x,0,hubPortal.root.position.z),materials:{black,gold,warm,purple}}):null;
+ const paperPopupNavigation={onPopupOpen:()=>{stopTour();travel=null;keyboardNavigation.clear();camera.detachControl()},onPopupClose:()=>resumeNavigation()};
+ const paperSheet=isV3?(await import('./paper-sheet.js')).createPaperSheet({scene,...paperPopupNavigation}):null;
+ const secondPaperSheet=isV3?(await import('./paper-sheet.js')).createPaperSheet({scene,cover:'covers/cover1.webp',coverAspect:1055/1491,position:[-8.4,0,18.5],rotationY:-.28+Math.PI/2+Math.PI+Math.PI/4,...paperPopupNavigation}):null;
  const rearGroundFog=createRearGroundFog(scene);
- scene.meshes.forEach(m=>{if(!m.metadata)m.isPickable=false});mirror.renderList=scene.meshes.filter(m=>m!==floor&&!m.metadata?.htmlVitrine);
+ scene.meshes.forEach(m=>{if(!m.metadata)m.isPickable=false});mirror.renderList=scene.meshes.filter(m=>m!==floor&&!m.metadata?.htmlVitrine&&!m.metadata?.paperLabel);
  // Create clustering after merging so Babylon's internal light proxy stays separate.
  if(B.ClusteredLightContainer.IsLightSupported(columnLights[0])){
   columnLightCluster=new B.ClusteredLightContainer('Column globe cluster',columnLights,scene);
@@ -225,7 +231,7 @@ async function start(){
   const picked=info.pickInfo?.pickedMesh;
   if(picked?.metadata?.imagePages&&(info.type===B.PointerEventTypes.POINTERTAP||info.type===B.PointerEventTypes.POINTERDOUBLETAP))turnVitrinePage(picked);
   else if(info.type===B.PointerEventTypes.POINTERTAP&&picked?.metadata?.article!==undefined){if(usesPdfVitrine(articles[picked.metadata.article]))pdfViewer.open();else openArticle(picked.metadata.article)}
-  if(info.type===B.PointerEventTypes.POINTERMOVE)canvas.style.cursor=picked?.metadata?'pointer':'grab';
+  if(info.type===B.PointerEventTypes.POINTERMOVE)canvas.style.cursor=(picked===discordVitrine?.screen?discordVitrine.isJoinHit(info.pickInfo):picked?.metadata)?'pointer':'grab';
  });
  function renderArticleBody(expanded=false){
   const article=articles[selected],paragraphs=article.paragraphs||[article.description];
@@ -296,7 +302,12 @@ async function start(){
  const lightingDebug=createLightingDebug({scene,camera,canvas,rendererInfo,ambient:hemi,fill,columnLights,columnLightCluster,columnLightColors,lanterns,frames,windowGlass,pipeline,imageProcessing,visuals,Color3:B.Color3});
  visuals.setProfile=qualityProfile=>lightingDebug.setSettings({qualityProfile});
  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
- scene.onBeforeRenderObservable.add(()=>{let dt=Math.min(engine.getDeltaTime(),50);if(!reduced){lanterns.update(dt);crystal.rotation.y+=dt*.00025;wire.rotation.y-=dt*.00013;crystal.position.y=crystalHeight+Math.sin(performance.now()*.0007)*.2}
+ scene.onBeforeRenderObservable.add(()=>{let dt=Math.min(engine.getDeltaTime(),50);if(!reduced){lanterns.update(dt);crystal.rotation.y+=dt*.00025;wire.rotation.y-=dt*.00013;crystal.position.y=crystalHeight+Math.sin(performance.now()*.0007)*.2;
+  crystalColorTime=(crystalColorTime+dt)%16000;
+  const blueAmount=(1-Math.cos(crystalColorTime*Math.PI*2/16000))*.5;
+  B.Color3.LerpToRef(crystalViolet,crystalBlue,blueAmount,crystalMaterial.diffuseColor);
+  crystalMaterial.diffuseColor.scaleToRef(1.3,crystalMaterial.emissiveColor);
+ }
   if(travel){travel.time+=dt;let t=Math.min(1,travel.time/travel.duration);t=t*t*(3-2*t);camera.position=B.Vector3.Lerp(travel.from,travel.to,t);camera.rotation=B.Vector3.Lerp(travel.r0,travel.r1,t);if(t>=1)travel=null}
   if(touring){
    const t=Math.min((performance.now()-tourStartedAt)/tourDuration,1);
@@ -350,5 +361,5 @@ async function start(){
  }).catch(startupError);
  engine.runRenderLoop(()=>scene.render());window.addEventListener('resize',()=>engine.resize());
  // Exposed read-only diagnostics and inspection helpers for browser QA.
- window.hall={scene,camera,frames,articles,setView,openArticle,engine,rendererInfo,pipeline,columnLights,columnLightCluster,lightingDebug,windowGlass,visuals,lanterns,atmosphere,entrancePortal,hubPortal,rearGroundFog,htmlVitrine,discordVitrine,pdfViewer,get qualityProfile(){return visuals.getProfile()},get renderMetrics(){return visuals.getMetrics()}};
+ window.hall={scene,camera,frames,articles,setView,openArticle,engine,rendererInfo,pipeline,columnLights,columnLightCluster,lightingDebug,windowGlass,visuals,lanterns,atmosphere,entrancePortal,hubPortal,rearGroundFog,htmlVitrine,discordVitrine,pdfViewer,paperSheet,get qualityProfile(){return visuals.getProfile()},get renderMetrics(){return visuals.getMetrics()}};
 }
