@@ -1,0 +1,18 @@
+import{n as e,y as n,o as a,z as o}from"./main-DnueoU3z.js";import"./entry-DTYZBklM.js";const s="imageProcessingPixelShader",i=`varying vec2 vUV;uniform sampler2D textureSampler;
+#include<imageProcessingDeclaration>
+#include<helperFunctions>
+#include<imageProcessingFunctions>
+#define CUSTOM_FRAGMENT_DEFINITIONS
+void main(void)
+{vec4 result=texture2D(textureSampler,vUV);result.rgb=max(result.rgb,vec3(0.));
+#ifdef IMAGEPROCESSING
+#ifndef FROMLINEARSPACE
+result.rgb=toLinearSpace(result.rgb);
+#endif
+result=applyImageProcessing(result);
+#else
+#ifdef FROMLINEARSPACE
+result=applyImageProcessing(result);
+#endif
+#endif
+gl_FragColor=result;}`;e.ShadersStore[s]||(e.ShadersStore[s]=i);const t=[n,a,o];for(const r of t)e.IncludesShadersStore[r.name]||(e.IncludesShadersStore[r.name]=r.shader);const d={name:s,shader:i};export{d as imageProcessingPixelShader};
