@@ -1,4 +1,12 @@
-import * as B from 'babylonjs';
+import {CreateTorus} from '@babylonjs/core/Meshes/Builders/torusBuilder.js';
+import {CreateDisc} from '@babylonjs/core/Meshes/Builders/discBuilder.js';
+import {ShaderStore} from '@babylonjs/core/Engines/shaderStore.js';
+import {TransformNode} from '@babylonjs/core/Meshes/transformNode.js';
+import {Mesh} from '@babylonjs/core/Meshes/mesh.js';
+import {ShaderMaterial} from '@babylonjs/core/Materials/shaderMaterial.js';
+import {ShaderLanguage} from '@babylonjs/core/Materials/shaderLanguage.js';
+import {Constants} from '@babylonjs/core/Engines/constants.js';
+import {Vector3} from '@babylonjs/core/Maths/math.vector.js';
 import vertexWGSL from './shaders/entrance-portal/portal.vertex.wgsl?raw';
 import ringWGSL from './shaders/entrance-portal/ring.fragment.wgsl?raw';
 import surfaceWGSL from './shaders/entrance-portal/surface.fragment.wgsl?raw';
@@ -14,20 +22,20 @@ const facingThreshold=.75;
 
 export function createEntrancePortal({scene,camera,onEnter=()=>window.location.assign(entrancePortalDestination)}){
  const webgpu=scene.getEngine().isWebGPU;
- const store=webgpu?B.ShaderStore.ShadersStoreWGSL:B.ShaderStore.ShadersStore;
+ const store=webgpu?ShaderStore.ShadersStoreWGSL:ShaderStore.ShadersStore;
  store.hallEntranceRingVertexShader=webgpu?vertexWGSL:vertexGLSL;
  store.hallEntranceRingPixelShader=webgpu?ringWGSL:ringGLSL;
  store.hallEntranceSurfaceVertexShader=webgpu?vertexWGSL:vertexGLSL;
  store.hallEntranceSurfacePixelShader=webgpu?surfaceWGSL:surfaceGLSL;
- const root=new B.TransformNode('Entrance return portal',scene);
+ const root=new TransformNode('Entrance return portal',scene);
  root.position.set(0,4.6,-20.2);root.scaling.setAll(portalScale);
- const ring=B.MeshBuilder.CreateTorus('Entrance portal ring',{diameter:2.65,thickness:.24,tessellation:96},scene);
+ const ring=CreateTorus('Entrance portal ring',{diameter:2.65,thickness:.24,tessellation:96},scene);
  ring.parent=root;ring.rotation.x=Math.PI*.5;
- const surface=B.MeshBuilder.CreateDisc('Entrance portal surface',{radius:1.18,tessellation:96,sideOrientation:B.Mesh.DOUBLESIDE},scene);
+ const surface=CreateDisc('Entrance portal surface',{radius:1.18,tessellation:96,sideOrientation:Mesh.DOUBLESIDE},scene);
  surface.parent=root;
  function material(name,shader){
-  const m=new B.ShaderMaterial(name,scene,shader,{
-   shaderLanguage:webgpu?B.ShaderLanguage.WGSL:B.ShaderLanguage.GLSL,
+  const m=new ShaderMaterial(name,scene,shader,{
+   shaderLanguage:webgpu?ShaderLanguage.WGSL:ShaderLanguage.GLSL,
    attributes:['position','normal'],uniforms:['world','viewProjection','cameraPos','portalTime','portalReveal'],
    needAlphaBlending:shader==='hallEntranceSurface'
   });
@@ -36,13 +44,13 @@ export function createEntrancePortal({scene,camera,onEnter=()=>window.location.a
  }
  ring.material=material('Entrance portal energy ring','hallEntranceRing');
  surface.material=material('Entrance portal currents','hallEntranceSurface');
- surface.material.alphaMode=B.Constants.ALPHA_COMBINE;surface.material.disableDepthWrite=true;
+ surface.material.alphaMode=Constants.ALPHA_COMBINE;surface.material.disableDepthWrite=true;
  const meshes=[ring,surface];
  for(const mesh of meshes){mesh.isPickable=false;mesh.checkCollisions=false;mesh.metadata={entrancePortal:true}}
  const motion=window.matchMedia('(prefers-reduced-motion: reduce)');
  const prompt=document.createElement('p');prompt.id='entrance-portal-prompt';prompt.className='portal-prompt';prompt.hidden=true;
  prompt.textContent='Press E to return to Sandbox';prompt.setAttribute('role','status');prompt.setAttribute('aria-live','polite');document.body.append(prompt);
- const toPortal=new B.Vector3();
+ const toPortal=new Vector3();
  let time=0,entered=false,interactionEnabled=false,canInteract=false;
  function refreshPrompt(){
   const focusedControl=document.activeElement?.closest('#light-debug,input,textarea,select,[contenteditable]:not([contenteditable="false"])');
@@ -52,7 +60,7 @@ export function createEntrancePortal({scene,camera,onEnter=()=>window.location.a
    const distance=toPortal.length();
    if(distance>0.05&&distance<=interactionDistance){
     toPortal.scaleInPlace(1/distance);
-    canInteract=B.Vector3.Dot(camera.getForwardRay().direction,toPortal)>=facingThreshold;
+    canInteract=Vector3.Dot(camera.getForwardRay().direction,toPortal)>=facingThreshold;
    }
   }
   prompt.hidden=!canInteract;

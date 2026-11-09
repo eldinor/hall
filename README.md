@@ -13,9 +13,13 @@ npm run dev
 
 Open the printed local URL. `npm run build` creates `dist/`; `npm run preview` serves that production build.
 
+The app uses selective `@babylonjs/core` imports and the modular `@babylonjs/addons` HTML-mesh implementation, both pinned to 9.33.0. Required runtime registrations are listed in `src/babylon-features.js`; avoid importing the full Babylon package or package-wide barrels. After changing Babylon imports, build and run `node verify-modular-bundle.mjs` to check all three editions on WebGL and WebGPU.
+
+`index.html` now matches the current V3 feature set: RuneScape PDF display, collectible paper sheets, and the live Discord vitrine. Both pages use `data-hall-version="3"`; `data-hall-page="main"` and `data-hall-page="v3"` distinguish the published main edition from the experiment page. Scope future V3-only experiments to the latter page marker so they do not automatically change main. V2 remains the separate HTML-vitrine edition.
+
 ## GitHub Pages
 
-Both `index.html` and `v2.html` are built, with relative asset paths for project hosting. The local `gh-pages` branch contains the prepared static site, including `.nojekyll`. Publishing is manual:
+All three entries (`index.html`, `v2.html`, and `v3.html`) are built, with relative asset paths for project hosting. The local `gh-pages` branch contains the prepared static site, including `.nojekyll`. Publishing is manual:
 
 1. Push the prepared branch: `git push origin gh-pages`.
 2. In GitHub repository settings, select **Pages > Source > Deploy from a branch**.

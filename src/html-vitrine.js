@@ -1,4 +1,5 @@
-﻿import {HtmlMesh,HtmlMeshRenderer} from 'babylonjs-addons';
+﻿import {HtmlMesh} from '@babylonjs/addons/htmlMesh/htmlMesh.js';
+import {HtmlMeshRenderer} from '@babylonjs/addons/htmlMesh/htmlMeshRenderer.js';
 import {createArticleHtml} from './article-html.js';
 
 export function createHtmlVitrine({scene,camera,canvas,parents,articles}){

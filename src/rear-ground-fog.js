@@ -1,4 +1,8 @@
-import * as B from 'babylonjs';
+import {CreatePlane} from '@babylonjs/core/Meshes/Builders/planeBuilder.js';
+import {ShaderStore} from '@babylonjs/core/Engines/shaderStore.js';
+import {Mesh} from '@babylonjs/core/Meshes/mesh.js';
+import {ShaderMaterial} from '@babylonjs/core/Materials/shaderMaterial.js';
+import {ShaderLanguage} from '@babylonjs/core/Materials/shaderLanguage.js';
 
 const vertexGLSL=`precision highp float;
 attribute vec3 position;
@@ -43,12 +47,12 @@ fn noise21(p:vec2f)->f32{let i=floor(p);var f=fract(p);f=f*f*(3.-2.*f);return mi
 }`;
 
 export function createRearGroundFog(scene){
- const webgpu=scene.getEngine().isWebGPU,store=webgpu?B.ShaderStore.ShadersStoreWGSL:B.ShaderStore.ShadersStore;
+ const webgpu=scene.getEngine().isWebGPU,store=webgpu?ShaderStore.ShadersStoreWGSL:ShaderStore.ShadersStore;
  store.hallRearFogVertexShader=webgpu?vertexWGSL:vertexGLSL;store.hallRearFogPixelShader=webgpu?fragmentWGSL:fragmentGLSL;
- const mesh=B.MeshBuilder.CreatePlane('Rear exterior ground fog',{width:44,height:16,sideOrientation:B.Mesh.DOUBLESIDE},scene);
+ const mesh=CreatePlane('Rear exterior ground fog',{width:44,height:16,sideOrientation:Mesh.DOUBLESIDE},scene);
  // Outside the back wall and portal: normal depth testing keeps the room clear.
  mesh.position.set(0,7,-27);mesh.isPickable=false;mesh.checkCollisions=false;mesh.applyFog=false;mesh.metadata={rearGroundFog:true};mesh.freezeWorldMatrix();
- const material=new B.ShaderMaterial('Rear low mist',scene,'hallRearFog',{shaderLanguage:webgpu?B.ShaderLanguage.WGSL:B.ShaderLanguage.GLSL,attributes:['position'],uniforms:['world','worldViewProjection','fogTime'],needAlphaBlending:true});
+ const material=new ShaderMaterial('Rear low mist',scene,'hallRearFog',{shaderLanguage:webgpu?ShaderLanguage.WGSL:ShaderLanguage.GLSL,attributes:['position'],uniforms:['world','worldViewProjection','fogTime'],needAlphaBlending:true});
  material.backFaceCulling=false;material.disableDepthWrite=true;material.setFloat('fogTime',0);mesh.material=material;
  const motion=window.matchMedia('(prefers-reduced-motion: reduce)');let time=0;
  function update(dt){if(!motion.matches)time+=dt;material.setFloat('fogTime',time)}

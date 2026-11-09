@@ -1,4 +1,5 @@
-import * as B from 'babylonjs';
+import {WebGPUEngine} from '@babylonjs/core/Engines/webgpuEngine.js';
+import {Engine} from '@babylonjs/core/Engines/engine.js';
 
 export const rendererStorageKey = 'exalted-renderer-v1';
 
@@ -18,11 +19,11 @@ export async function createRenderer(canvas) {
   if (preference === 'auto') {
     let candidate;
     try {
-      if (!await B.WebGPUEngine.IsSupportedAsync) {
+      if (!await WebGPUEngine.IsSupportedAsync) {
         fallbackReason = 'WebGPU is unavailable in this browser or on this device.';
       } else {
         const base = `${import.meta.env.BASE_URL}webgpu/9.33.0/`;
-        candidate = new B.WebGPUEngine(canvas, {
+        candidate = new WebGPUEngine(canvas, {
           antialias: true, stencil: true,
           glslangOptions: { jsPath: `${base}glslang.js`, wasmPath: `${base}glslang.wasm` },
           twgslOptions: { jsPath: `${base}twgsl.js`, wasmPath: `${base}twgsl.wasm` },
@@ -40,6 +41,6 @@ export async function createRenderer(canvas) {
       console.warn(fallbackReason);
     }
   }
-  const engine = new B.Engine(canvas, true, { stencil: true, preserveDrawingBuffer: true });
+  const engine = new Engine(canvas, true, { stencil: true, preserveDrawingBuffer: true });
   return { engine, canvas, rendererInfo: Object.freeze({ preference, activeBackend: 'webgl', fallbackReason }) };
 }

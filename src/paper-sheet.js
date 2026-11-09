@@ -1,4 +1,14 @@
-import * as B from 'babylonjs';
+import {CreateGround} from '@babylonjs/core/Meshes/Builders/groundBuilder.js';
+import {CreatePlane} from '@babylonjs/core/Meshes/Builders/planeBuilder.js';
+import {TransformNode} from '@babylonjs/core/Meshes/transformNode.js';
+import {VertexBuffer} from '@babylonjs/core/Buffers/buffer.js';
+import {VertexData} from '@babylonjs/core/Meshes/mesh.vertexData.js';
+import {PBRMaterial} from '@babylonjs/core/Materials/PBR/pbrMaterial.js';
+import {Texture} from '@babylonjs/core/Materials/Textures/texture.js';
+import {Mesh} from '@babylonjs/core/Meshes/mesh.js';
+import {Color3} from '@babylonjs/core/Maths/math.color.js';
+import {DynamicTexture} from '@babylonjs/core/Materials/Textures/dynamicTexture.js';
+import {StandardMaterial} from '@babylonjs/core/Materials/standardMaterial.js';
 
 const collections=new WeakMap();
 
@@ -58,15 +68,15 @@ function recordCollection(scene,onPopupOpen,onPopupClose){
 // A static, gently curled magazine sheet. Ground UVs keep the cover intact.
 export function createPaperSheet({scene,cover='covers/Official_Cover_Art_portrait.webp',coverAspect=1080/1920,position=[8.4,0,7.5],rotationY=-.28+Math.PI/2,onPopupOpen,onPopupClose}){
  const coverUrl=import.meta.env.BASE_URL+cover;
- const root=new B.TransformNode('Curved paper test',scene);
+ const root=new TransformNode('Curved paper test',scene);
  // Tuck each sheet between exhibits, toward the outer side of the aisle.
  root.position.set(...position);
  root.scaling.setAll(.5);
  root.rotation.y=rotationY;
  const width=3,height=width/coverAspect,thickness=.008;
- const front=B.MeshBuilder.CreateGround('Printed paper face',{width,height,subdivisions:48,updatable:true},scene);
+ const front=CreateGround('Printed paper face',{width,height,subdivisions:48,updatable:true},scene);
  front.parent=root;
- const positions=front.getVerticesData(B.VertexBuffer.PositionKind);
+ const positions=front.getVerticesData(VertexBuffer.PositionKind);
  for(let i=0;i<positions.length;i+=3){
   const x=positions[i]/(width/2),z=positions[i+2]/(height/2);
   // Mostly flat, with a curling long edge and one softly raised corner.
@@ -75,29 +85,29 @@ export function createPaperSheet({scene,cover='covers/Official_Cover_Art_portrai
    +.025*Math.sin(z*Math.PI)*Math.sin(x*Math.PI);
  }
  const indices=front.getIndices(),normals=[];
- B.VertexData.ComputeNormals(positions,indices,normals);
- front.updateVerticesData(B.VertexBuffer.PositionKind,positions);
- front.updateVerticesData(B.VertexBuffer.NormalKind,normals);
+ VertexData.ComputeNormals(positions,indices,normals);
+ front.updateVerticesData(VertexBuffer.PositionKind,positions);
+ front.updateVerticesData(VertexBuffer.NormalKind,normals);
  front.refreshBoundingInfo();
- const ink=new B.PBRMaterial('Matte printed paper',scene);
- ink.albedoTexture=new B.Texture(coverUrl,scene);
- ink.albedoTexture.wrapU=ink.albedoTexture.wrapV=B.Texture.CLAMP_ADDRESSMODE;
+ const ink=new PBRMaterial('Matte printed paper',scene);
+ ink.albedoTexture=new Texture(coverUrl,scene);
+ ink.albedoTexture.wrapU=ink.albedoTexture.wrapV=Texture.CLAMP_ADDRESSMODE;
  ink.albedoTexture.anisotropicFilteringLevel=16;
  ink.metallic=0;ink.roughness=.88;ink.environmentIntensity=.35;
  front.material=ink;
 
- const back=new B.Mesh('Paper reverse',scene),backData=new B.VertexData();
+ const back=new Mesh('Paper reverse',scene),backData=new VertexData();
  backData.positions=positions.map((value,index)=>index%3===1?value-thickness:value);
  backData.indices=[];
  for(let i=0;i<indices.length;i+=3)backData.indices.push(indices[i],indices[i+2],indices[i+1]);
- backData.normals=[];B.VertexData.ComputeNormals(backData.positions,backData.indices,backData.normals);
+ backData.normals=[];VertexData.ComputeNormals(backData.positions,backData.indices,backData.normals);
  backData.applyToMesh(back);back.parent=root;
- const stock=new B.PBRMaterial('Warm white paper stock',scene);
- stock.albedoColor=B.Color3.FromHexString('#eee9dc');stock.metallic=0;stock.roughness=.95;
+ const stock=new PBRMaterial('Warm white paper stock',scene);
+ stock.albedoColor=Color3.FromHexString('#eee9dc');stock.metallic=0;stock.roughness=.95;
  back.material=stock;
 
  // Close the perimeter so raised corners have a thin, visible paper edge.
- const edges=new B.Mesh('Paper cut edges',scene),edgeData=new B.VertexData();
+ const edges=new Mesh('Paper cut edges',scene),edgeData=new VertexData();
  edgeData.positions=[];edgeData.indices=[];
  const count=49,perimeter=[];
  for(let col=0;col<count;col++)perimeter.push(col);
@@ -110,12 +120,12 @@ export function createPaperSheet({scene,cover='covers/Official_Cover_Art_portrai
    edgeData.positions.push(positions[vertex],positions[vertex+1]-drop,positions[vertex+2]);
   edgeData.indices.push(offset,offset+1,offset+2,offset+1,offset+3,offset+2);
  }
- edgeData.normals=[];B.VertexData.ComputeNormals(edgeData.positions,edgeData.indices,edgeData.normals);
+ edgeData.normals=[];VertexData.ComputeNormals(edgeData.positions,edgeData.indices,edgeData.normals);
  edgeData.applyToMesh(edges);edges.parent=root;edges.material=stock;
  const sheetMeshes=[front,back,edges];
  for(const mesh of sheetMeshes){mesh.isPickable=true;mesh.metadata={paperSheet:true};mesh.freezeWorldMatrix()}
 
- const labelTexture=new B.DynamicTexture('Paper hover text',{width:1024,height:256},scene,false);
+ const labelTexture=new DynamicTexture('Paper hover text',{width:1024,height:256},scene,false);
  labelTexture.hasAlpha=true;
  const ctx=labelTexture.getContext();
  ctx.clearRect(0,0,1024,256);
@@ -128,13 +138,13 @@ export function createPaperSheet({scene,cover='covers/Official_Cover_Art_portrai
  ctx.fillStyle='#ddd9ec';ctx.font='40px "Segoe UI", Arial, sans-serif';
  ctx.fillText('Collect all pieces to read',512,198);
  labelTexture.update();
- const labelMaterial=new B.StandardMaterial('Paper hover label',scene);
+ const labelMaterial=new StandardMaterial('Paper hover label',scene);
  labelMaterial.diffuseTexture=labelTexture;labelMaterial.emissiveTexture=labelTexture;
  labelMaterial.useAlphaFromDiffuseTexture=true;labelMaterial.disableLighting=true;
- labelMaterial.fogEnabled=false;labelMaterial.specularColor=B.Color3.Black();
- const label=B.MeshBuilder.CreatePlane('Piece of article hover label',{width:3.8,height:.95},scene);
+ labelMaterial.fogEnabled=false;labelMaterial.specularColor=Color3.Black();
+ const label=CreatePlane('Piece of article hover label',{width:3.8,height:.95},scene);
  label.position.copyFrom(root.position);label.position.y=1.15;
- label.billboardMode=B.Mesh.BILLBOARDMODE_ALL;
+ label.billboardMode=Mesh.BILLBOARDMODE_ALL;
  label.material=labelMaterial;label.isPickable=false;label.metadata={paperLabel:true};
  label.setEnabled(false);
 

@@ -1,8 +1,14 @@
-import * as B from 'babylonjs';
+import {CreatePlane} from '@babylonjs/core/Meshes/Builders/planeBuilder.js';
+import {TransformNode} from '@babylonjs/core/Meshes/transformNode.js';
+import {DynamicTexture} from '@babylonjs/core/Materials/Textures/dynamicTexture.js';
+import {StandardMaterial} from '@babylonjs/core/Materials/standardMaterial.js';
+import {Color3} from '@babylonjs/core/Maths/math.color.js';
+import {Mesh} from '@babylonjs/core/Meshes/mesh.js';
+import {PointerEventTypes} from '@babylonjs/core/Events/pointerEvents.js';
 import {beveledBox,projectArchitecturalUVs} from './architecture.js';
 
 export function createDiscordVitrine({scene,camera,position,materials}){
- const root=new B.TransformNode('Discord community vitrine',scene);root.position.copyFrom(position);
+ const root=new TransformNode('Discord community vitrine',scene);root.position.copyFrom(position);
  function box(name,width,height,depth,x,y,z,material){
   const mesh=beveledBox(name,width,height,depth,scene);mesh.parent=root;mesh.position.set(x,y,z);mesh.material=material;mesh.isPickable=false;mesh.metadata={discordVitrine:true};projectArchitecturalUVs(mesh);return mesh;
  }
@@ -22,7 +28,7 @@ export function createDiscordVitrine({scene,camera,position,materials}){
  let data=null,error=null,updatedAt=null,disposed=false,request=null;
  const logo=new Image();let logoReady=false;
  logo.onload=()=>{if(!disposed){logoReady=true;draw()}};
- const texture=new B.DynamicTexture('Exalted Discord community',{width:768,height:1152},scene,true);
+ const texture=new DynamicTexture('Exalted Discord community',{width:768,height:1152},scene,true);
  const context=texture.getContext();
  const text=(value,x,y,size=30,color='#f2f3f5',weight=400)=>{context.font=`${weight} ${size}px "Segoe UI",Arial,sans-serif`;context.fillStyle=color;context.fillText(value,x,y)};
  const rect=(x,y,width,height,color)=>{context.fillStyle=color;context.fillRect(x,y,width,height)};
@@ -75,8 +81,8 @@ export function createDiscordVitrine({scene,camera,position,materials}){
   finally{clearTimeout(timeout);request=null}
  }
  draw();logo.src=`${import.meta.env.BASE_URL}assets/branding/exalted-logo.svg`;texture.anisotropicFilteringLevel=8;
- const displayMaterial=new B.StandardMaterial('Discord widget display',scene);displayMaterial.disableLighting=true;displayMaterial.fogEnabled=false;displayMaterial.diffuseColor=B.Color3.Black();displayMaterial.emissiveColor=B.Color3.Black();displayMaterial.emissiveTexture=texture;texture.level=.9;
- const screen=B.MeshBuilder.CreatePlane('Discord widget',{width:2.65,height:3.975,sideOrientation:B.Mesh.DOUBLESIDE},scene);screen.parent=root;screen.position.set(0,3.05,-.14);screen.material=displayMaterial;screen.isPickable=true;screen.metadata={discordVitrine:true,mock:false};
+ const displayMaterial=new StandardMaterial('Discord widget display',scene);displayMaterial.disableLighting=true;displayMaterial.fogEnabled=false;displayMaterial.diffuseColor=Color3.Black();displayMaterial.emissiveColor=Color3.Black();displayMaterial.emissiveTexture=texture;texture.level=.9;
+ const screen=CreatePlane('Discord widget',{width:2.65,height:3.975,sideOrientation:Mesh.DOUBLESIDE},scene);screen.parent=root;screen.position.set(0,3.05,-.14);screen.material=displayMaterial;screen.isPickable=true;screen.metadata={discordVitrine:true,mock:false};
  function isJoinHit(pick){
   if(pick?.pickedMesh!==screen)return false;
   const uv=pick.getTextureCoordinates();if(!uv)return false;
@@ -84,7 +90,7 @@ export function createDiscordVitrine({scene,camera,position,materials}){
   return x>=40&&x<=728&&y>=960&&y<=1024;
  }
  const joinObserver=scene.onPointerObservable.add(info=>{
-  if(info.type===B.PointerEventTypes.POINTERTAP&&isJoinHit(info.pickInfo))window.open(inviteURL,'_blank','noopener,noreferrer');
+  if(info.type===PointerEventTypes.POINTERTAP&&isJoinHit(info.pickInfo))window.open(inviteURL,'_blank','noopener,noreferrer');
  });
  function update(){const dx=root.position.x-camera.position.x,dz=root.position.z-camera.position.z;if(dx*dx+dz*dz>.0001)root.rotation.y=Math.atan2(dx,dz)}
  update();

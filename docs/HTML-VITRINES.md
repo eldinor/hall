@@ -5,7 +5,7 @@ The first left/right pair on `v2.html` has landscape displays with an inner area
 - Vitrine 01: GTA VI: Inside Rockstar's New Open World.
 - Vitrine 02: WoW Forever: Some Worlds Never Leave Us.
 
-Both readers use local HTML `<div>` elements rendered in the scene through Babylon.js `HtmlMesh` / `HtmlMeshRenderer`, from the matching `babylonjs-addons@9.33.0` package. The former Hub iframe and its controls have been removed from the first vitrine. No iframe or external embedding permission is needed for these articles.
+Both readers use local HTML `<div>` elements rendered in the scene through Babylon.js `HtmlMesh` / `HtmlMeshRenderer`, imported directly from the matching `@babylonjs/addons@9.33.0` HTML-mesh modules. They share the app's modular `@babylonjs/core` instance. The former Hub iframe and its controls have been removed from the first vitrine. No iframe or external embedding permission is needed for these articles.
 
 Each display includes its original artwork, title, optional subtitle and byline, and formatted text. Read more expands the full body inside a fixed-height scroll area. Mouse-wheel input over either reader explicitly scrolls the text and is prevented from moving the camera.
 

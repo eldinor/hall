@@ -1,4 +1,11 @@
-import * as B from 'babylonjs';
+import {CreateBox} from '@babylonjs/core/Meshes/Builders/boxBuilder.js';
+import {VertexData} from '@babylonjs/core/Meshes/mesh.vertexData.js';
+import {CubeTexture} from '@babylonjs/core/Materials/Textures/cubeTexture.js';
+import {Texture} from '@babylonjs/core/Materials/Textures/texture.js';
+import {StandardMaterial} from '@babylonjs/core/Materials/standardMaterial.js';
+import {Color3} from '@babylonjs/core/Maths/math.color.js';
+import {PBRMaterial} from '@babylonjs/core/Materials/PBR/pbrMaterial.js';
+import {Mesh} from '@babylonjs/core/Meshes/mesh.js';
 
 // A reusable pressed-glass block: square footprint, rounded corners, beveled
 // shoulders and slightly cushioned faces, so highlights catch each brick edge.
@@ -18,34 +25,34 @@ function createBlockGeometry(){
  for(let i=0;i<8;i++)indices.push(back,lastRing+i,lastRing+(i+1)%8);
  // Babylon's default left-handed winding needs outward-facing block surfaces.
  for(let i=0;i<indices.length;i+=3){const next=indices[i+1];indices[i+1]=indices[i+2];indices[i+2]=next}
- B.VertexData.ComputeNormals(positions,indices,normals);
- const data=new B.VertexData();data.positions=positions;data.indices=indices;data.normals=normals;return data;
+ VertexData.ComputeNormals(positions,indices,normals);
+ const data=new VertexData();data.positions=positions;data.indices=indices;data.normals=normals;return data;
 }
 
 export function createWindowGlass(scene){
  // Keep lighting/reflections compact; Cinematic can load a sharper visible sky.
- const reflection=B.CubeTexture.CreateFromPrefilteredData(`${import.meta.env.BASE_URL}environments/night.env`,scene);
+ const reflection=CubeTexture.CreateFromPrefilteredData(`${import.meta.env.BASE_URL}environments/night.env`,scene);
  scene.environmentTexture=reflection;
  let skyTexture=reflection.clone(),skyResolution=512,skyGeneration=0;
- skyTexture.coordinatesMode=B.Texture.SKYBOX_MODE;skyTexture.level=.7;
- const skybox=B.MeshBuilder.CreateBox('Night skybox',{size:300},scene);
+ skyTexture.coordinatesMode=Texture.SKYBOX_MODE;skyTexture.level=.7;
+ const skybox=CreateBox('Night skybox',{size:300},scene);
  skybox.infiniteDistance=true;skybox.isPickable=false;skybox.applyFog=false;
  skybox.metadata={skybox:true};
- const skyMaterial=new B.StandardMaterial('Night sky',scene);
+ const skyMaterial=new StandardMaterial('Night sky',scene);
  skyMaterial.backFaceCulling=false;skyMaterial.disableLighting=true;skyMaterial.disableDepthWrite=true;skyMaterial.fogEnabled=false;
- skyMaterial.diffuseColor=B.Color3.Black();skyMaterial.specularColor=B.Color3.Black();skyMaterial.reflectionTexture=skyTexture;
+ skyMaterial.diffuseColor=Color3.Black();skyMaterial.specularColor=Color3.Black();skyMaterial.reflectionTexture=skyTexture;
  skybox.material=skyMaterial;
  reflection.rotationY=skyTexture.rotationY=110*Math.PI/180;
  function setSkyResolution(size){
   const version=++skyGeneration;
   if(size===skyResolution)return Promise.resolve();
   function replace(next){
-   next.coordinatesMode=B.Texture.SKYBOX_MODE;next.level=skyTexture.level;next.rotationY=skyTexture.rotationY;
+   next.coordinatesMode=Texture.SKYBOX_MODE;next.level=skyTexture.level;next.rotationY=skyTexture.rotationY;
    const previous=skyTexture;skyTexture=next;skyResolution=size;skyMaterial.reflectionTexture=next;previous.dispose();
   }
   if(size===512){replace(reflection.clone());return Promise.resolve()}
   return new Promise((resolve,reject)=>{
-   const next=new B.CubeTexture(`${import.meta.env.BASE_URL}environments/night-1024.env`,scene,undefined,false,undefined,()=>{
+   const next=new CubeTexture(`${import.meta.env.BASE_URL}environments/night-1024.env`,scene,undefined,false,undefined,()=>{
     if(version!==skyGeneration||scene.isDisposed){next.dispose();resolve();return}
     replace(next);resolve();
    },(message,error)=>{next.dispose();if(version!==skyGeneration||scene.isDisposed)resolve();else reject(new Error(message||String(error)))},undefined,true);
@@ -54,16 +61,16 @@ export function createWindowGlass(scene){
  scene.onDisposeObservable.add(()=>{skyGeneration++});
  const materials=[];
  for(const side of [-1,1]){
-  const glass=new B.PBRMaterial(`Glass block material ${side}`,scene);
-  glass.albedoColor=B.Color3.White();glass.emissiveColor=B.Color3.Black();glass.metallic=0;glass.roughness=.045;
+  const glass=new PBRMaterial(`Glass block material ${side}`,scene);
+  glass.albedoColor=Color3.White();glass.emissiveColor=Color3.Black();glass.metallic=0;glass.roughness=.045;
   // Alpha transmission keeps the sky visible; the refracted environment
   // and Fresnel highlights reveal the rounded faces of the 24 cm glass blocks.
-  glass.transparencyMode=B.PBRMaterial.PBRMATERIAL_ALPHABLEND;glass.alpha=.22;
+  glass.transparencyMode=PBRMaterial.PBRMATERIAL_ALPHABLEND;glass.alpha=.22;
   glass.useRadianceOverAlpha=true;glass.useSpecularOverAlpha=true;
   glass.environmentIntensity=.55;glass.reflectionTexture=reflection;
   glass.usePhysicalLightFalloff=false;
   glass.subSurface.isRefractionEnabled=true;glass.subSurface.refractionIntensity=1;
-  glass.subSurface.indexOfRefraction=1.52;glass.subSurface.tintColor=B.Color3.White();
+  glass.subSurface.indexOfRefraction=1.52;glass.subSurface.tintColor=Color3.White();
   glass.subSurface.useAlbedoToTintRefraction=false;glass.subSurface.linkRefractionWithTransparency=false;
   glass.subSurface.minimumThickness=.24;glass.subSurface.maximumThickness=.24;
   glass.subSurface.refractionTexture=reflection;glass.subSurface.useThicknessAsDepth=true;
@@ -71,7 +78,7 @@ export function createWindowGlass(scene){
  }
  const geometry=createBlockGeometry();let prototype=null,blockCount=0;
  function createBlock(side,y,z){
-  const block=prototype?prototype.clone(`Square glass block ${++blockCount}`,null,true):new B.Mesh(`Square glass block ${++blockCount}`,scene);
+  const block=prototype?prototype.clone(`Square glass block ${++blockCount}`,null,true):new Mesh(`Square glass block ${++blockCount}`,scene);
   if(!prototype){geometry.applyToMesh(block);prototype=block}
   block.position.set(side*12.35,y,z);block.material=materials[side<0?0:1];return block;
  }

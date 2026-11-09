@@ -45,7 +45,7 @@ try{
   console.log(`${backend}: both local HTML articles, scrolling, focus, occlusion and reader checks passed`);await page.close();
  }
  const page=await browser.newPage({viewport:{width:1280,height:850}}),addonRequests=[];
- page.on('request',request=>{if(request.url().includes('babylonjs-addons'))addonRequests.push(request.url())});
+ page.on('request',request=>{if(/@babylonjs[\/_]addons|html-vitrine/.test(request.url()))addonRequests.push(request.url())});
  await page.goto(server.resolvedUrls.local[0]);await page.waitForFunction(()=>window.hall&&document.documentElement.dataset.appState==='ready',null,{timeout:120000});
  assert.equal(await page.evaluate(()=>hall.htmlVitrine),null);await page.evaluate(()=>hall.openArticle(0));
  assert.equal(await page.locator('#article').evaluate(dialog=>dialog.open),true);assert.deepEqual(addonRequests,[]);

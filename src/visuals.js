@@ -1,4 +1,10 @@
-import * as B from 'babylonjs';
+import {ReflectionProbe} from '@babylonjs/core/Probes/reflectionProbe.js';
+import {RenderTargetTexture} from '@babylonjs/core/Materials/Textures/renderTargetTexture.js';
+import {EngineInstrumentation} from '@babylonjs/core/Instrumentation/engineInstrumentation.js';
+import {SceneInstrumentation} from '@babylonjs/core/Instrumentation/sceneInstrumentation.js';
+import {GeometryBufferRenderer} from '@babylonjs/core/Rendering/geometryBufferRenderer.js';
+import {Color4} from '@babylonjs/core/Maths/math.color.js';
+import {SSAO2RenderingPipeline} from '@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/ssao2RenderingPipeline.js';
 import {renderingSamples} from './renderer.js';
 
 export const qualityProfiles={
@@ -11,8 +17,8 @@ export function createVisualSystem({scene,engine,camera,pipeline,mirror,surfaces
  scene.shadowsEnabled=false;
  // Plinth marble retains the interior capture. Thin brass trims use the
  // prefiltered environment: the raw probe adds sharp, unstable strip highlights.
- const probe=new B.ReflectionProbe('Pedestal marble reflections',256,scene,true);
- probe.renderParticles=false;probe.position.set(0,1.2,18);probe.renderList=[];probe.cubeTexture.gammaSpace=false;probe.cubeTexture.refreshRate=B.RenderTargetTexture.REFRESHRATE_RENDER_ONCE;
+ const probe=new ReflectionProbe('Pedestal marble reflections',256,scene,true);
+ probe.renderParticles=false;probe.position.set(0,1.2,18);probe.renderList=[];probe.cubeTexture.gammaSpace=false;probe.cubeTexture.refreshRate=RenderTargetTexture.REFRESHRATE_RENDER_ONCE;
  surfaces.gold.reflectionTexture=windowGlass.reflection;surfaces.black.reflectionTexture=probe.cubeTexture;
  const reflectionMeshes=scene.meshes.filter(m=>!m.metadata?.htmlVitrine&&!m.metadata?.paperLabel&&m.name!=='Polished marble floor'&&!windowGlass.materials.includes(m.material)&&m.material!==surfaces.gold&&m.material!==surfaces.black);
  let reflectionSignature='';
@@ -20,8 +26,8 @@ export function createVisualSystem({scene,engine,camera,pipeline,mirror,surfaces
  const spots=[],shadows=[];
  const lightBudget=columnLightCluster?3:4;
  for(const material of scene.materials)if('maxSimultaneousLights' in material)material.maxSimultaneousLights=lightBudget;
- const instrumentation=new B.EngineInstrumentation(engine);instrumentation.captureGPUFrameTime=!!engine.getCaps().timerQuery;
- const sceneInstrumentation=new B.SceneInstrumentation(scene);sceneInstrumentation.captureFrameTime=true;sceneInstrumentation.captureRenderTime=true;
+ const instrumentation=new EngineInstrumentation(engine);instrumentation.captureGPUFrameTime=!!engine.getCaps().timerQuery;
+ const sceneInstrumentation=new SceneInstrumentation(scene);sceneInstrumentation.captureFrameTime=true;sceneInstrumentation.captureRenderTime=true;
  const intervals=[];let previous=performance.now(),metrics={},frames=0;
  scene.onAfterRenderObservable.add(()=>{
   const now=performance.now();intervals.push(now-previous);previous=now;if(intervals.length>120)intervals.shift();
@@ -43,12 +49,12 @@ export function createVisualSystem({scene,engine,camera,pipeline,mirror,surfaces
     // Geometry-buffer depth defaults to zero in empty sky pixels. SSAO treats
     // those as foreground, blacking out windows and the portal at high strength.
     // Clear only linear depth to far distance; leave the other attachments alone.
-    const gBuffer=geometry.getGBuffer(),depthIndex=geometry.getTextureIndex(B.GeometryBufferRenderer.DEPTH_TEXTURE_TYPE);
+    const gBuffer=geometry.getGBuffer(),depthIndex=geometry.getTextureIndex(GeometryBufferRenderer.DEPTH_TEXTURE_TYPE);
     const depthLayout=engine.buildTextureLayout(Array.from({length:gBuffer.count},(_,index)=>index===depthIndex));
     const allLayout=engine.buildTextureLayout(Array.from({length:gBuffer.count},()=>true));
-    const farDepth=new B.Color4(camera.maxZ,0,0,1);
+    const farDepth=new Color4(camera.maxZ,0,0,1);
     gBuffer.onClearObservable.add(()=>{farDepth.r=camera.maxZ;engine.clearAttachments(farDepth,depthLayout,true,false,false);engine.bindAttachments(allLayout)});
-    ao=new B.SSAO2RenderingPipeline('EXALTED contact occlusion',scene,{ssaoRatio:.5,blurRatio:.5},[camera],geometry);
+    ao=new SSAO2RenderingPipeline('EXALTED contact occlusion',scene,{ssaoRatio:.5,blurRatio:.5},[camera],geometry);
     ao.samples=16;ao.radius=.35;ao.totalStrength=.55;ao.base=.15;ao.maxZ=100;ao.textureSamples=samples;ao.bilateralSamples=8;
    }else aoActive=false;
   }
@@ -58,7 +64,7 @@ export function createVisualSystem({scene,engine,camera,pipeline,mirror,surfaces
   currentSettings={...settings};const selected=qualityProfiles[settings.qualityProfile]?settings.qualityProfile:'cinematic',config=qualityProfiles[selected];
   const changed=profile!==selected;profile=selected;
   const samples=renderingSamples(engine,selected);
-  const wantAO=config.ao&&settings.aoEnabled&&B.SSAO2RenderingPipeline.IsSupported;
+  const wantAO=config.ao&&settings.aoEnabled&&SSAO2RenderingPipeline.IsSupported;
   const aoChanged=rebuildAO(wantAO,samples);
   if(ao){ao.radius=settings.aoRadius;ao.totalStrength=settings.aoStrength;ao.textureSamples=samples}
   if(changed){

@@ -12,7 +12,7 @@ try{
   await page.goto(url);
   await page.waitForFunction(()=>window.hall&&document.documentElement.dataset.appState==='ready',null,{timeout:120000});
   assert.equal(await page.evaluate(()=>hall.rendererInfo.activeBackend),backend);
-  assert.equal(await page.evaluate(()=>hall.engine.constructor.Version),JSON.parse(fs.readFileSync('package.json','utf8')).dependencies.babylonjs,'Running server has a stale Babylon.js dependency');
+  assert.equal(await page.evaluate(()=>hall.engine.constructor.Version),JSON.parse(fs.readFileSync('package.json','utf8')).dependencies['@babylonjs/core'],'Running server has a stale Babylon.js dependency');
   assert.equal(await page.evaluate(()=>document.activeElement.id),'scene');
   async function move(key,axis,sign){
    // Leave ample room inside the walking bounds and remove residual inertia.

@@ -17,8 +17,8 @@
     "assets:environment": "node prepare-environment.mjs"
   },
   "dependencies": {
-    "babylonjs": "9.33.0",
-    "babylonjs-addons": "9.33.0",
+    "@babylonjs/addons": "9.33.0",
+    "@babylonjs/core": "9.33.0",
     "pdfjs-dist": "6.5.438"
   },
   "devDependencies": {

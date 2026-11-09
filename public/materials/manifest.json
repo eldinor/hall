@@ -23,27 +23,27 @@
           "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/beige_wall_001/beige_wall_001_diff_2k.jpg"
         },
         {
-          "path": "limestone/1024/normal.png",
+          "path": "limestone/1024/normal.webp",
           "size": 1024,
-          "sha256": "05a343f57039377cc3907f5a106d0af3ed702daaeebba757f963c515e03d07fc",
+          "sha256": "7784a3ba51ae9ac7f45b5668e5910e2c5faece56877127748087f4ad428b02e5",
           "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/beige_wall_001/beige_wall_001_nor_gl_2k.jpg"
         },
         {
-          "path": "limestone/2048/normal.png",
+          "path": "limestone/2048/normal.webp",
           "size": 2048,
-          "sha256": "b05324026f75104d6487ab216518c1fa81ef7044eb876174ac7beeaf0c184997",
+          "sha256": "c1c82351b9f4b86fc2439735c508241852ffa14bad3646ce2b227755caca22e7",
           "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/beige_wall_001/beige_wall_001_nor_gl_2k.jpg"
         },
         {
-          "path": "limestone/1024/orm.png",
+          "path": "limestone/1024/orm.webp",
           "size": 1024,
-          "sha256": "fc0dfb660c2cf037673c338c5e96b9a8e04be72aa5e7ddc1b8851b34b29a2395",
+          "sha256": "238a102d5f9512229b357f3ab8d0708bb5fa62b2569a33f07fe1c3dffb2d4cf1",
           "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/beige_wall_001/beige_wall_001_arm_2k.jpg"
         },
         {
-          "path": "limestone/2048/orm.png",
+          "path": "limestone/2048/orm.webp",
           "size": 2048,
-          "sha256": "b60582882b7889657ba9c12d6b03d47831029931c0d42b66ddf6ca71d2a7b2bb",
+          "sha256": "8b4a749b6dad2620bf102455c86bb1e9cc68d48ce5f09b7308742c2b39fbda1e",
           "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/beige_wall_001/beige_wall_001_arm_2k.jpg"
         }
       ]
@@ -66,27 +66,27 @@
           "source": "https://ambientcg.com/get?file=Marble012_2K-JPG.zip"
         },
         {
-          "path": "marble/1024/normal.png",
+          "path": "marble/1024/normal.webp",
           "size": 1024,
-          "sha256": "f3e031aa85a5fbd354012ad34deda9eb21209efeda5a73726d829ba5cceefead",
+          "sha256": "c7150fd7388d821e0752d41727bfca2996e2fe2465bfe5a7e5a8189ca3dc4176",
           "source": "https://ambientcg.com/get?file=Marble012_2K-JPG.zip"
         },
         {
-          "path": "marble/2048/normal.png",
+          "path": "marble/2048/normal.webp",
           "size": 2048,
-          "sha256": "acb6a58d3333b4895dca24a93f0f235fc351e495b8e1b6dcf12a086fb2db59bf",
+          "sha256": "fa3484c677241757274a468da608223caf7eb235e37ea21047e4fce1358809c3",
           "source": "https://ambientcg.com/get?file=Marble012_2K-JPG.zip"
         },
         {
-          "path": "marble/1024/orm.png",
+          "path": "marble/1024/orm.webp",
           "size": 1024,
-          "sha256": "52ff03bc715b23c0b61141049b1a444b8ea5621f13b88fc9eac5053b600a7156",
+          "sha256": "077718aabdd290c95334b1b493f2f5c28cbbc7d32f851a43288eb208a74b5510",
           "source": "https://ambientcg.com/get?file=Marble012_2K-JPG.zip"
         },
         {
-          "path": "marble/2048/orm.png",
+          "path": "marble/2048/orm.webp",
           "size": 2048,
-          "sha256": "b63fd1593f5d35ed91141f3c900ebdbc5f1e545748dac5dd7d27115158b2c4af",
+          "sha256": "da3600f60628c7f620e0bed0b50fb9efe1b75960d8de5a406f8e74b0af11020d",
           "source": "https://ambientcg.com/get?file=Marble012_2K-JPG.zip"
         }
       ]
@@ -109,27 +109,27 @@
           "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/metal_plate/metal_plate_diff_2k.jpg"
         },
         {
-          "path": "brass/1024/normal.png",
+          "path": "brass/1024/normal.webp",
           "size": 1024,
-          "sha256": "aa170ca3c639aa0f409445b442f745fc7443fb4f7b7be40b0580809df1ee90da",
+          "sha256": "741d1b1f09d26aae362cee7d3d59eb3e56908e0c6880a5d5a5172d3f8f1a5a50",
           "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/metal_plate/metal_plate_nor_gl_2k.jpg"
         },
         {
-          "path": "brass/2048/normal.png",
+          "path": "brass/2048/normal.webp",
           "size": 2048,
-          "sha256": "dee0838635d9f3bf5c649d184deef808a582ea4e4128d300c1e651e919c38e57",
+          "sha256": "4c1683d51d557ef77fe246a89b1a2dd6997a7353e24726b7776e2dab33f0980b",
           "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/metal_plate/metal_plate_nor_gl_2k.jpg"
         },
         {
-          "path": "brass/1024/orm.png",
+          "path": "brass/1024/orm.webp",
           "size": 1024,
-          "sha256": "cbcda76d55d33a0f140f407cea5125403fcd3b9bc4cdbd14520778d0f9a3c436",
+          "sha256": "f6fd7cb21e6d812598eab3cbb7929dafff37df4365adf7588f7e01228a2323ce",
           "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/metal_plate/metal_plate_arm_2k.jpg"
         },
         {
-          "path": "brass/2048/orm.png",
+          "path": "brass/2048/orm.webp",
           "size": 2048,
-          "sha256": "6b80152e8cf9c55d90c90062d72ae7f8b5858c37db36b44ca220a0e6f8e6d6aa",
+          "sha256": "d6eca5c31337475d72531bc2e377596c32d85713f43edcccd88120da15a857d1",
           "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/metal_plate/metal_plate_arm_2k.jpg"
         }
       ]

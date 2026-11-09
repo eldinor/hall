@@ -23,8 +23,8 @@ try{
  await page.evaluate(async selected=>{
   if(hall.visuals)await hall.visuals.setProfile(selected);
   document.querySelector('#light-debug').open=false;
-  const module=await import('/node_modules/.vite/deps/babylonjs.js');const B=module.default||module;
-  const instrumentation=new B.SceneInstrumentation(hall.scene);instrumentation.captureFrameTime=true;instrumentation.captureRenderTime=true;window.qaInstrumentation=instrumentation;
+  const {SceneInstrumentation}=await import('/node_modules/@babylonjs/core/Instrumentation/sceneInstrumentation.js');
+  const instrumentation=new SceneInstrumentation(hall.scene);instrumentation.captureFrameTime=true;instrumentation.captureRenderTime=true;window.qaInstrumentation=instrumentation;
  },profile);
  if(args.includes('--effects-off'))await page.evaluate(()=>hall.lightingDebug.setSettings({shadowsEnabled:false,aoEnabled:false}));
  const views=[['entrance',[0,4.6,-17],[2.7,8.5,28]],['nave',[0,3.1,10],[0,9,49]],['portal',[0,3.2,37],[0,7.5,55]],['windows',[0,7,10],[14,11,13]],['pedestal',[-4.5,2.5,-1],[-7.8,3.2,2]]];

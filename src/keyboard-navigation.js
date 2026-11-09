@@ -1,4 +1,4 @@
-import * as B from 'babylonjs';
+import {KeyboardInfo,KeyboardEventTypes} from '@babylonjs/core/Events/keyboardEvents.js';
 
 const movementKeys=new Map([
  ['KeyW',87],['KeyA',65],['KeyS',83],['KeyD',68],
@@ -14,7 +14,7 @@ export function createKeyboardNavigation({scene,camera,canvas,onNavigate}){
  const codeOf=event=>event.code||({w:'KeyW',a:'KeyA',s:'KeyS',d:'KeyD'})[event.key?.toLowerCase()]||event.key;
  const notify=(type,code,key)=>{
   const event=new KeyboardEvent(type,{code,key,keyCode:movementKeys.get(code)});
-  scene.onKeyboardObservable.notifyObservers(new B.KeyboardInfo(type==='keydown'?B.KeyboardEventTypes.KEYDOWN:B.KeyboardEventTypes.KEYUP,event));
+  scene.onKeyboardObservable.notifyObservers(new KeyboardInfo(type==='keydown'?KeyboardEventTypes.KEYDOWN:KeyboardEventTypes.KEYUP,event));
  };
  const release=code=>{if(held.has(code)){notify('keyup',code,held.get(code));held.delete(code)}};
  const clear=()=>{for(const code of [...held.keys()])release(code);setRunning(false)};

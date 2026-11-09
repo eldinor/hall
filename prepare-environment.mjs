@@ -8,15 +8,21 @@ const browser=await chromium.launch({channel:'chromium',headless:true,args:['--u
 try{
  const page=await browser.newPage();
  page.on('pageerror',error=>console.error(error.message));
- await page.route('**/__environment-bake',route=>route.fulfill({contentType:'text/html',body:'<canvas id="bake" width="16" height="16"></canvas><script src="/node_modules/babylonjs/babylon.js"></script>'}));
+ await page.route('**/__environment-bake',route=>route.fulfill({contentType:'text/html',body:'<canvas id="bake" width="16" height="16"></canvas>'}));
  await page.goto(new URL('__environment-bake',url).href);
  const encoded=await page.evaluate(async()=>{
-  const B=window.BABYLON,engine=new B.Engine(document.querySelector('#bake'),false),scene=new B.Scene(engine);
+  const [{Engine},{Scene},{HDRCubeTexture},EnvironmentTextureTools]=await Promise.all([
+   import('/node_modules/@babylonjs/core/Engines/engine.js'),
+   import('/node_modules/@babylonjs/core/scene.js'),
+   import('/node_modules/@babylonjs/core/Materials/Textures/hdrCubeTexture.js'),
+   import('/node_modules/@babylonjs/core/Misc/environmentTextureTools.js'),
+  ]);
+  const engine=new Engine(document.querySelector('#bake'),false),scene=new Scene(engine);
   try{
    const texture=await new Promise((resolve,reject)=>{
-    const hdr=new B.HDRCubeTexture('/assets/environment-source/kloppenheim_02_puresky_4k.hdr',scene,1024,false,true,false,true,()=>resolve(hdr),(message,error)=>reject(new Error(message||String(error))));
+    const hdr=new HDRCubeTexture('/assets/environment-source/kloppenheim_02_puresky_4k.hdr',scene,1024,false,true,false,true,()=>resolve(hdr),(message,error)=>reject(new Error(message||String(error))));
    });
-   const bytes=await B.EnvironmentTextureTools.CreateEnvTextureAsync(texture,{imageType:'image/webp',imageQuality:.95});
+   const bytes=await EnvironmentTextureTools.CreateEnvTextureAsync(texture,{imageType:'image/webp',imageQuality:.95});
    return await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result.split(',')[1]);reader.onerror=reject;reader.readAsDataURL(new Blob([bytes]))});
   }finally{scene.dispose();engine.dispose()}
  });

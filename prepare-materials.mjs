@@ -43,9 +43,9 @@ for(const [role,id]of sources){
   if(role==='marble'&&map==='orm')for(let n=0;n<120;n++){const x=(n*613)%2048,y=(n*827)%2048;for(let k=0;k<35;k++){const xx=(x+k)%2048,yy=(y+Math.floor(k*.14))%2048;const i=(yy*2048+xx)*original.info.channels;original.data[i+1]=Math.min(120,original.data[i+1]+20)}}
   for(const size of [1024,2048]){
    const directory=path.resolve('public/materials',role,String(size));fs.mkdirSync(directory,{recursive:true});
-   const filename=map+(map==='albedo'?'.webp':'.png');const destination=path.join(directory,filename);
+   const filename=map+'.webp';const destination=path.join(directory,filename);
    let image=sharp(original.data,{raw:original.info}).resize(size,size);
-   image=map==='albedo'?image.webp({quality:88}):image.png({compressionLevel:9});
+   image=map==='albedo'?image.webp({quality:88}):image.webp({lossless:true,effort:6});
    await image.toFile(destination);
    entry.files.push({path:`${role}/${size}/${filename}`,size,sha256:crypto.createHash('sha256').update(fs.readFileSync(destination)).digest('hex'),source:source.url});
   }
